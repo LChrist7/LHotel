@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <div class="bg-ex-blur">
+      <div class="img-blur"></div>
+    </div>
+    <head>
+        <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='images/abh.jpg') }}" rel="stylesheet">
+        <title>Отель</title>
+    </head>
+    <body>
+        <nav class="top-menu">
+            <ul class="menu-main">
+                <li><a href="/" >Новая бронь</a></li>
+                <li><a href="/search">Проверка номеров</a></li>
+                <li><a href="/cancel">Отмена брони</a></li>
+                <li><a href="/check" class="current">Отчеты</a></li>
+            </ul>
+        </nav>
+        <div class="divcheck">
+            <h1 class="h1check">Выгрузка в Excel</h1>
+            <form action="/check" method="post" class="formcheck" id="formcheck">
+                <h2>
+                    Выгрузка графика
+                </h2>
+                <p><label>Начало периода:</label>
+                <input type="date" name="checkstart" id="checkstart" value="Date()" > </p>
+                <p><label>Конец периода:</label>
+                <input type="date" name="checkend" id="checkend" value="Date()" > </p>
+                <p><input type="submit" value = "Выгрузить"></p>
+            </form>
+            <form action="/check" method="post" class="formallcheck" id="formallcheck">
+                <h2>
+                    Выгрузка всех бронирований
+                </h2>
+                <p><label>Начало периода:</label>
+                <input type="date" name="allcheckstart" id="allcheckstart" value="Date()" > </p>
+                <p><label>Конец периода:</label>
+                <input type="date" name="allcheckend" id="allcheckend" value="Date()" > </p>
+                <p><input type="submit" value = "Выгрузить"></p>
+            </form>
+        </div>
+    </body>
+</html>
