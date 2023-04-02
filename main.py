@@ -1,10 +1,10 @@
 from datetime import date, timedelta, datetime
-from openpyxl.styles import PatternFill
-import sqlite3
-import os
-from openpyxl import Workbook
-import DBSQL
 from flask import Flask, render_template, url_for, request, g, redirect
+from openpyxl import Workbook
+from openpyxl.styles import PatternFill
+import os
+import sqlite3
+import DBSQL
 import string
 import sys
 import webbrowser
@@ -24,9 +24,7 @@ def resource_path(relative_path):
 
 app = Flask(__name__, static_url_path="", static_folder=resource_path(
     'static'), template_folder=resource_path("templates"))
-
 app.config.from_object(__name__)
-
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'hotel.db')))
 
 
@@ -34,15 +32,6 @@ def connect_db():
     conn = sqlite3.connect(app.config['DATABASE'])
     conn.row_factory = sqlite3.Row
     return conn
-
-
-# поменялась структура базы, надо изменить create
-def create_db():
-    db = connect_db()
-    with app.open_resource('sq_db.sql', mode='r') as f:
-        db.cursor().execute(f.read())
-    db.commit()
-    db.close()
 
 
 def get_db():
@@ -136,8 +125,6 @@ def check():
         sheetall.column_dimensions['I'].width = 13
         sheetall.column_dimensions['L'].width = 16
         sheetall.column_dimensions['M'].width = 50
-        i = 0
-        k = 2
         sheetall['A1'] = '№ заявки'
         sheetall['B1'] = 'ФИО'
         sheetall['C1'] = '№ комнаты'
@@ -151,6 +138,7 @@ def check():
         sheetall['K1'] = 'Трансфер'
         sheetall['L1'] = 'От туроператора'
         sheetall['M1'] = 'Комментарий'
+        i, k = 0, 2
         for item in row:
             sumg = 0
             for j in letters[0:6]:
