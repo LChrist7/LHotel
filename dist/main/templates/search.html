@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+    <div class="bg-ex-blur">
+      <div class="img-blur"></div>
+    </div>
+    <head>
+        <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='images/abh.jpg') }}" rel="stylesheet">
+        <title>Отель</title>
+    </head>
+    <body>
+        <nav class="top-menu">
+            <ul class="menu-main">
+                <li><a href="/" >Новая бронь</a></li>
+                <li><a href="/search" class="current">Проверка номеров</a></li>
+                <li><a href="/cancel">Отмена брони</a></li>
+                <li><a href="/check">Отчеты</a></li>
+            </ul>
+        </nav>
+        <div class="divsearch">
+            <h1 class="h1search">Свободные номера</h1>
+            <form action="/search" method="post" class="formsearch" id="formsearch">
+                <p><label>Дата заезда:</label>
+                <input type="datetime-local" name="SearchStart" id="searchstart" value="Date()" > </p>
+                <p><label>Дата выезда:</label>
+                <input type="datetime-local" name="SearchEnd" id="searchend" value="Date()" > </p>
+                <p><input type="submit" value = "Проверить"></p>
+            </form>
+            {% for m in rooms -%}
+                <p>{{m}}</p>
+            {% endfor -%}
+        </div>
+        <script>
+            function resetv(form)   {
+                document.getElementById(form).reset()
+            }
+
+            function sumFunc(start, end, price) {
+                let date1 = new Date(start.value)
+                let date2 = new Date(end.value)
+                var p = price.value
+                document.getElementById("Sum").innerHTML = (date2 - date1) / (3600000*24) * p;
+            }
+        </script>
+
+    </body>
+</html>
