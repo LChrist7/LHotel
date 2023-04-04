@@ -135,8 +135,8 @@ def check():
         sheetall['H1'] = 'Полный пансион'
         sheetall['I1'] = 'Полупансион'
         sheetall['J1'] = 'Завтрак'
-        sheetall['K1'] = 'Трансфер'
-        sheetall['L1'] = 'От туроператора'
+        sheetall['K1'] = 'От туроператора'
+        sheetall['L1'] = 'Трансфер'
         sheetall['M1'] = 'Комментарий'
         i, k = 0, 2
         for item in row:
@@ -152,9 +152,9 @@ def check():
             sheetall[letters[8] + str(k)] = item[12]
             sheetall[letters[9] + str(k)] = item[13]
             if item[14] == 1:
-                sheetall[letters[10] + str(k)] = 'Нужен'
+                sheetall[letters[10] + str(k)] = 'Да'
             if item[15] == 1:
-                sheetall[letters[11] + str(k)] = 'Да'
+                sheetall[letters[11] + str(k)] = 'Нужен'
             sheetall[letters[12] + str(k)] = item[16]
             k += 1
             i = 0
