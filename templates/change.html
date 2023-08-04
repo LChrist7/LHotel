@@ -34,7 +34,7 @@
         <form action="/change" method="post" class="form-newguest" id="form1">
             <div class="divguests">
                 <p><label>Номер брони:</label>
-                <input type="number" name="numchange" id="numchange" value="" > </p>
+                <input type="text" name="numchange" id="numchange" value="" > </p>
                 <p><input type="submit" value = "Вывести информацию"> </p>
                 <label for="range">Кол-во гостей:</label>
                 <output id="numg" class="outguests">1</output>
@@ -44,6 +44,9 @@
             </div>
             <div class="divguestsinfo">
                 <div id="1" class="range-blocks" >
+                    <p><label>Номер брони:</label>
+                        <input class="ccomm" type="text" name="numchange2" id="numchange2" readonly value="{{ info['numbook'] }}">
+                    </p>
                     <input class="cfio" type="text" name="FullName1" placeholder="ФИО" value="{{ guest1['fio'] }}" />
                     <input class="cdoc" type="text" name="Doc1" value="{{ guest1['doc'] }}" placeholder="Номер паспорта" />
                     <input type="date" name="Born1" id = "Born1" value="{{ guest1['born'] }}" >
@@ -76,7 +79,7 @@
                     <input class="cfio" type="text" name="FullName2" placeholder="ФИО" value="{{ guest2['fio'] }}" />
                     <input class="cdoc" type="text" name="Doc2" value="{{ guest2['doc'] }}" placeholder="Номер паспорта"/>
                     <input type="date" name="Born2" id = "Born2" value="{{ guest2['born'] }}" >
-                    <input class="cphone" type="text" name="Phone2" placeholder="Телефон" />
+                    <input class="cphone" type="text" name="Phone2" placeholder="Телефон" value="{{ guest2['phone'] }}"/>
                     <p>
                         <input type="checkbox" name="fullpans2" id = "fullpans2"/>
                         <label for="fullpans2">Полный пансион</label>
@@ -105,7 +108,7 @@
                     <input class="cfio" type="text" name="FullName3" placeholder="ФИО" value="{{ guest3['fio'] }}" />
                     <input class="cdoc" type="text" name="Doc3" value="{{ guest3['doc'] }}" placeholder="Номер паспорта"/>
                     <input type="date" name="Born3" id = "Born3" value="{{ guest3['born'] }}" >
-                    <input class="cphone" type="text" name="Phone3" placeholder="Телефон" />
+                    <input class="cphone" type="text" name="Phone3" placeholder="Телефон" value="{{ guest3['phone'] }}"/>
                     <p>
                         <input type="checkbox" name="fullpans3" id = "fullpans3"/>
                         <label for="fullpans3">Полный пансион</label>
@@ -134,7 +137,7 @@
                     <input class="cfio" type="text" name="FullName4" placeholder="ФИО" value="{{ guest4['fio'] }}" />
                     <input class="cdoc" type="text" name="Doc4" value="{{ guest4['doc'] }}" placeholder="Номер паспорта"/>
                     <input type="date" name="Born4" id = "Born4" value="{{ guest4['born'] }}" >
-                    <input class="cphone" type="text" name="Phone4" placeholder="Телефон" />
+                    <input class="cphone" type="text" name="Phone4" placeholder="Телефон" value="{{ guest4['phone'] }}"/>
                     <p>
                         <input type="checkbox" name="fullpans4" id = "fullpans4"/>
                         <label for="fullpans4">Полный пансион</label>
@@ -163,7 +166,7 @@
                     <input class="cfio" type="text" name="FullName5" placeholder="ФИО" value="{{ guest5['fio'] }}" />
                     <input class="cdoc" type="text" name="Doc5" value="{{ guest5['doc'] }}" placeholder="Номер паспорта"/>
                     <input type="date" name="Born5" id = "Born5" value="{{ guest5['born'] }}" >
-                    <input class="cphone" type="text" name="Phone5" placeholder="Телефон" />
+                    <input class="cphone" type="text" name="Phone5" placeholder="Телефон" value="{{ guest5['phone'] }}"/>
                     <p>
                         <input type="checkbox" name="fullpans5" id = "fullpans5"/>
                         <label for="fullpans5">Полный пансион</label>

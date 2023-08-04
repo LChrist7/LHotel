@@ -176,7 +176,8 @@ def check():
 
 @app.route("/change", methods=["POST", "GET"])
 def change():
-    if request.method == 'POST' and 'numchange' in request.form:
+    if request.method == 'POST' and 'numchange' in request.form and request.form['numchange']:
+        print(request.form)
         db = get_db()
         dbase = DBSQL.DBSQL(db)
         context = list(dbase.viewbook(request.form['numchange']))
@@ -191,27 +192,42 @@ def change():
                                guest4=(dict(guests[3]) if len(guests) > 3 else []),
                                guest5=(dict(guests[4]) if len(guests) > 4 else []),
                                info=dict(info[0]), sumdiff=int(info[0]['sumbook'] - info[0]['prep']))
-    if request.method == 'POST' and 'FullName1' in request.form:
-        # db = get_db()
-        # dbase = DBSQL.DBSQL(db)
-        # guest1 = gclass.GClass()
-        # guest2 = gclass.GClass()
-        # guest3 = gclass.GClass()
-        # guest4 = gclass.GClass()
-        # guest5 = gclass.GClass()
-        # guest1.createguest1(request.form)
-        # guest2.createguest2(request.form)
-        # guest3.createguest3(request.form)
-        # guest4.createguest4(request.form)
-        # guest5.createguest5(request.form)
-        # if 'Transfer' in request.form and request.form['Transfer'] == 'on':
-        #     transfer = 1
-        # else:
-        #     transfer = 0
-        # if 'Tour' in request.form and request.form['Tour'] == 'on':
-        #     tour = 1
-        # else:
-        #     tour = 0
+    if request.method == 'POST' and 'FullName1' in request.form and request.form['FullName1']:
+        db = get_db()
+        dbase = DBSQL.DBSQL(db)
+        sumbook = (datetime.fromisoformat(request.form['DateEnd'].replace('T', ' ')).date() -
+                   datetime.fromisoformat(request.form['DateStart'].replace('T', ' ')).date()).days * int(
+            request.form['Price'])
+        startdatedef = datetime.fromisoformat(request.form['DateStart'].replace('T', ' '))
+        enddatedef = datetime.fromisoformat(request.form['DateEnd'].replace('T', ' '))
+        guest1 = gclass.GClass()
+        guest2 = gclass.GClass()
+        guest3 = gclass.GClass()
+        guest4 = gclass.GClass()
+        guest5 = gclass.GClass()
+        guest1.createguest1(request.form)
+        guest2.createguest2(request.form)
+        guest3.createguest3(request.form)
+        guest4.createguest4(request.form)
+        guest5.createguest5(request.form)
+        if 'Transfer' in request.form and request.form['Transfer'] == 'on':
+            transfer = 1
+        else:
+            transfer = 0
+        if 'Tour' in request.form and request.form['Tour'] == 'on':
+            tour = 1
+        else:
+            tour = 0
+        resadd = dbase.updatebook(request.form['numchange2'], guest1, guest2, guest3, guest4, guest5,
+                               startdatedef, enddatedef, request.form['Room'],
+                               tour, transfer, request.form['Price'], request.form['Prep'],
+                               sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
+        db.commit()
+        db.close()
+        if resadd == 1:
+            return '<h2>Бронь не может быть создана. Комната занята в эти даты</h2>'
+        if resadd == 0:
+            return '<h2>Бронь не может быть создана. Произошла ошибка</h2>'
         return redirect("/change")
     else:
         return render_template('change.html', guest1=[], guest2=[], guest3=[], guest4=[], guest5=[],
@@ -221,6 +237,7 @@ def change():
 @app.route("/", methods=["POST", "GET"])
 def index():
     if request.method == 'POST' and 'FullName1' in request.form:
+        print(2)
         sumbook = (datetime.fromisoformat(request.form['DateEnd'].replace('T', ' ')).date() -
                    datetime.fromisoformat(request.form['DateStart'].replace('T', ' ')).date()).days * int(
             request.form['Price'])
@@ -246,10 +263,12 @@ def index():
             tour = 1
         else:
             tour = 0
-        resadd = dbase.addbook(guest1, guest2, guest3, guest4, guest5,
+        print(3)
+        resadd = dbase.addbook(request.form['Numbook'], guest1, guest2, guest3, guest4, guest5,
                                startdatedef, enddatedef, request.form['Room'],
                                tour, transfer, request.form['Price'], request.form['Prep'],
                                sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
+        print(4)
         db.commit()
         db.close()
         if resadd == 1:
