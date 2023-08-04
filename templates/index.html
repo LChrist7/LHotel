@@ -24,6 +24,7 @@
         <nav class="top-menu">
             <ul class="menu-main">
                 <li><a href="/" class="current">Новая бронь</a></li>
+                <li><a href="/change">О брони</a></li>
                 <li><a href="/search">Проверка номеров</a></li>
                 <li><a href="/cancel">Отмена брони</a></li>
                 <li><a href="/check">Отчеты</a></li>
@@ -124,6 +125,9 @@
                 </p>
                 <p><label>Цена</label>
                     <input class="cpr" type="number" name="Price" oninput="sumFunc(DateStart, DateEnd, Price)" value=0 >
+                руб.</p>
+                <p><label>Предоплата</label>
+                    <input class="cpr" type="number" name="Prep"  value=0 >
                 руб.</p>
                 <p>Сумма: <output id="Sum" name = "Sum" > 0 </output> руб. </p>
             </div>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+    <div class="bg-ex-blur">
+      <div class="img-blur"></div>
+    </div>
+    <head>
+        <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='images/abh.jpg') }}" rel="stylesheet">
+        <style>
+            .img-blur{
+            position: absolute;
+            z-index: 1;
+            width: 95%;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: center;
+            filter: blur(4px);
+            background: url("{{ url_for('static',filename='images/abh.jpg') }}");
+            }
+        </style>
+        <title>Отель</title>
+    </head>
+    <body>
+        <nav class="top-menu">
+            <ul class="menu-main">
+                <li><a href="/" >Новая бронь</a></li>
+                <li><a href="/change" class="current">О брони</a></li>
+                <li><a href="/search">Проверка номеров</a></li>
+                <li><a href="/cancel">Отмена брони</a></li>
+                <li><a href="/check">Отчеты</a></li>
+            </ul>
+        </nav>
+        <h1 class="h1new">О бронировании</h1>
+        <form action="/change" method="post" class="form-newguest" id="form1">
+            <div class="divguests">
+                <p><label>Номер брони:</label>
+                <input type="number" name="numchange" id="numchange" value="" > </p>
+                <p><input type="submit" value = "Вывести информацию"> </p>
+                <label for="range">Кол-во гостей:</label>
+                <output id="numg" class="outguests">1</output>
+                <p><input type="range" id="range" min="1" max="5" name="range" class="range"
+                           step="1" value="1" oninput="elemShow(this.value)">
+                </p>
+            </div>
+            <div class="divguestsinfo">
+                <div id="1" class="range-blocks" >
+                    <input class="cfio" type="text" name="FullName1" placeholder="ФИО" value="{{ guest1['fio'] }}" />
+                    <input class="cdoc" type="text" name="Doc1" value="{{ guest1['doc'] }}" placeholder="Номер паспорта" />
+                    <input type="date" name="Born1" id = "Born1" value="{{ guest1['born'] }}" >
+                    <input class="cphone" type="text" name="Phone1" placeholder="Телефон" value="{{ guest1['phone'] }}"/>
+                    <p>
+                        <input type="checkbox" name="fullpans1" id = "fullpans1" value=""/>
+                        <label for="fullpans1">Полный пансион</label>
+                        {% if guest1['f'] == 1 %}
+                            <script>
+                                document.getElementById("fullpans1").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="halfpans1" id = "halfpans1" value=""/>
+                        <label for="halfpans1">Полупансион</label>
+                        {% if guest1['h'] == 1 %}
+                            <script>
+                                document.getElementById("halfpans1").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="breakfast1" id = "breakfast1" value=""/>
+                        <label for="breakfast1">Завтрак</label>
+                        {% if guest1['b'] == 1 %}
+                            <script>
+                                document.getElementById("breakfast1").checked = true;
+                            </script>
+                        {% endif %}
+                    </p>
+                </div>
+                <div id="2" class="range-blocks" style="display:none">
+                    <input class="cfio" type="text" name="FullName2" placeholder="ФИО" value="{{ guest2['fio'] }}" />
+                    <input class="cdoc" type="text" name="Doc2" value="{{ guest2['doc'] }}" placeholder="Номер паспорта"/>
+                    <input type="date" name="Born2" id = "Born2" value="{{ guest2['born'] }}" >
+                    <input class="cphone" type="text" name="Phone2" placeholder="Телефон" />
+                    <p>
+                        <input type="checkbox" name="fullpans2" id = "fullpans2"/>
+                        <label for="fullpans2">Полный пансион</label>
+                        {% if guest2['f'] == 1 %}
+                            <script>
+                                document.getElementById("fullpans2").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="halfpans2" id = "halfpans2"/>
+                        <label for="halfpans2">Полупансион</label>
+                        {% if guest2['h'] == 1 %}
+                            <script>
+                                document.getElementById("halfpans2").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="breakfast2" id = "breakfast2"/>
+                        <label for="breakfast2">Завтрак</label>
+                        {% if guest2['b'] == 1 %}
+                            <script>
+                                document.getElementById("breakfast2").checked = true;
+                            </script>
+                        {% endif %}
+                    </p>
+                </div>
+                <div id="3" class="range-blocks" style="display:none">
+                    <input class="cfio" type="text" name="FullName3" placeholder="ФИО" value="{{ guest3['fio'] }}" />
+                    <input class="cdoc" type="text" name="Doc3" value="{{ guest3['doc'] }}" placeholder="Номер паспорта"/>
+                    <input type="date" name="Born3" id = "Born3" value="{{ guest3['born'] }}" >
+                    <input class="cphone" type="text" name="Phone3" placeholder="Телефон" />
+                    <p>
+                        <input type="checkbox" name="fullpans3" id = "fullpans3"/>
+                        <label for="fullpans3">Полный пансион</label>
+                        {% if guest3['f'] == 1 %}
+                            <script>
+                                document.getElementById("fullpans3").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="halfpans3" id = "halfpans3"/>
+                        <label for="halfpans3">Полупансион</label>
+                        {% if guest3['h'] == 1 %}
+                            <script>
+                                document.getElementById("halfpans3").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="breakfast3" id = "breakfast3"/>
+                        <label for="breakfast3">Завтрак</label>
+                        {% if guest3['b'] == 1 %}
+                            <script>
+                                document.getElementById("breakfast3").checked = true;
+                            </script>
+                        {% endif %}
+                    </p>
+                </div>
+                <div id="4" class="range-blocks" style="display:none">
+                    <input class="cfio" type="text" name="FullName4" placeholder="ФИО" value="{{ guest4['fio'] }}" />
+                    <input class="cdoc" type="text" name="Doc4" value="{{ guest4['doc'] }}" placeholder="Номер паспорта"/>
+                    <input type="date" name="Born4" id = "Born4" value="{{ guest4['born'] }}" >
+                    <input class="cphone" type="text" name="Phone4" placeholder="Телефон" />
+                    <p>
+                        <input type="checkbox" name="fullpans4" id = "fullpans4"/>
+                        <label for="fullpans4">Полный пансион</label>
+                        {% if guest4['f'] == 1 %}
+                            <script>
+                                document.getElementById("fullpans4").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="halfpans4" id = "halfpans4"/>
+                        <label for="halfpans4">Полупансион</label>
+                        {% if guest4['h'] == 1 %}
+                            <script>
+                                document.getElementById("halfpans4").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="breakfast4" id = "breakfast4"/>
+                        <label for="breakfast4">Завтрак</label>
+                        {% if guest4['b'] == 1 %}
+                            <script>
+                                document.getElementById("breakfast4").checked = true;
+                            </script>
+                        {% endif %}
+                    </p>
+                </div>
+                <div id="5" class="range-blocks" style="display:none">
+                    <input class="cfio" type="text" name="FullName5" placeholder="ФИО" value="{{ guest5['fio'] }}" />
+                    <input class="cdoc" type="text" name="Doc5" value="{{ guest5['doc'] }}" placeholder="Номер паспорта"/>
+                    <input type="date" name="Born5" id = "Born5" value="{{ guest5['born'] }}" >
+                    <input class="cphone" type="text" name="Phone5" placeholder="Телефон" />
+                    <p>
+                        <input type="checkbox" name="fullpans5" id = "fullpans5"/>
+                        <label for="fullpans5">Полный пансион</label>
+                        {% if guest5['f'] == 1 %}
+                            <script>
+                                document.getElementById("fullpans5").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="halfpans5" id = "halfpans5"/>
+                        <label for="halfpans5">Полупансион</label>
+                        {% if guest5['h'] == 1 %}
+                            <script>
+                                document.getElementById("halfpans5").checked = true;
+                            </script>
+                        {% endif %}
+                        <input type="checkbox" name="breakfast5" id = "breakfast5"/>
+                        <label for="breakfast5">Завтрак</label>
+                        {% if guest5['b'] == 1 %}
+                            <script>
+                                document.getElementById("breakfast5").checked = true;
+                            </script>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            <div class="divinfo2">
+                <p><label>Комната</label> <input class="croom" type="number" name="Room" value="{{ info['room'] }}" />
+                <p><label>Дата заезда</label>
+                    <input type="datetime-local" name="DateStart" oninput="sumFunc(DateStart, DateEnd, Price)"
+                           value="{{ info['ds'] }}" > </p>
+                <p><label>Дата выезда</label>
+                    <input type="datetime-local" name="DateEnd" oninput="sumFunc(DateStart, DateEnd, Price)"
+                           value="{{ info['de'] }}" > </p>
+                <p><label for="Tour">Туроператор</label>
+                    <input type="checkbox" name="Tour" id = "Tour" />
+                    {% if info['tour'] == 1 %}
+                        <script>
+                            function checkto() {
+                                document.getElementById("Tour").checked = true;
+                            }
+                            checkto();
+                        </script>
+                    {% endif %}
+                </p>
+                <p><label for="Transfer">Трансфер</label>
+                    <input type="checkbox" name="Transfer" id = "Transfer"/>
+                    {% if info['transfer'] == 1 %}
+                        <script>
+                            document.getElementById("Transfer").checked = true;
+                        </script>
+                    {% endif %}
+                </p>
+                <p><label>Цена</label>
+                    <input class="cpr" type="number" name="Price" value="{{ info['price'] }}"  >
+                руб.</p>
+                <p><label>Предоплата</label>
+                    <input class="cpr" type="number" name="Prep"  value="{{ info['prep'] }}" >
+                руб.</p>
+                <p>Сумма оплаты при въезде: <output id="Sumost" name = "Sumost" >
+                    {{ sumdiff }} </output> руб. </p>
+                <p>Сумма: <output id="Sum" name = "Sum" > {{ info['sumbook'] }} </output> руб. </p>
+            </div>
+            <div class="comandbut">
+                <p><label>Комментарий:</label>
+                    <input class="ccomm" type="text" name="Comm" value="{{ info['comm'] }}">
+                </p>
+                <p><input type="submit" value = "Сохранить изменения" onended="clickSave()"> </p>
+            </div>
+        </form>
+        <script>
+            function elemShow(numrange) {
+                let numberrange = numrange;
+                let i = parseInt(numrange) + 1;
+                document.getElementById("numg").innerHTML = numberrange;
+                document.getElementById(numberrange).style.display = 'block';
+                for (; i < 6; i++) {
+                    document.getElementById(i).style.display = 'none';
+                }
+                i = 0;
+            }
+
+            function sumFunc(start, end, price) {
+                let date1 = new Date(start.value);
+                let date2 = new Date(end.value);
+                date1.setHours(0, 0, 0, 0);
+                date2.setHours(0, 0, 0, 0);
+                var p = price.value;
+                document.getElementById("Sum").innerHTML = (date2 - date1) / (3600000*24) * p;
+            }
+
+            function clickSave(){
+                alert("Бронирование сохранено")
+                document.getElementById("form1").reset();
+                document.getElementById("FullName1").value = '';
+            }
+            sumFunc(document.getElementById("DateStart").value, document.getElementById("DateEnd").value,
+            document.getElementById("Price").value);
+        </script>
+    </body>
+</html>

@@ -50,7 +50,7 @@ class DBSQL:
         return []
 
     def addbook(self, guest1, guest2, guest3, guest4, guest5,
-                sdate, edate, room, tour, transfer, price, sumbook, sdatewl, edatewl, comm):
+                sdate, edate, room, tour, transfer, price, prep, sumbook, sdatewl, edatewl, comm):
         try:
             rescheck = self.makesearchonadd(sdatewl, edatewl, room)
             if rescheck == 1:
@@ -65,25 +65,25 @@ class DBSQL:
             bookskey4 = (guest4.Fullname + guest4.Born).replace(' ', '')
             bookskey5 = (guest5.Fullname + guest5.Born).replace(' ', '')
             if guest1.Fullname != '':
-                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born) 
-                                   VALUES (NULL, ?, ?, ?, ?)""",
-                                   (guest1.Fullname, guest1.Doc, bookskey1, guest1.Born))
+                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born, phone) 
+                                   VALUES (NULL, ?, ?, ?, ?, ?)""",
+                                   (guest1.Fullname, guest1.Doc, bookskey1, guest1.Born, guest1.Phone))
             if guest2.Fullname != '':
-                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born) 
-                                   VALUES (NULL, ?, ?, ?, ?)""",
-                                   (guest2.Fullname, guest2.Doc, bookskey2, guest2.Born))
+                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born, phone) 
+                                   VALUES (NULL, ?, ?, ?, ?, ?)""",
+                                   (guest2.Fullname, guest2.Doc, bookskey2, guest2.Born, guest2.Phone))
             if guest3.Fullname != '':
-                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born) 
-                                   VALUES (NULL, ?, ?, ?, ?)""",
-                                   (guest3.Fullname, guest3.Doc, bookskey3, guest3.Born))
+                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born, phone) 
+                                   VALUES (NULL, ?, ?, ?, ?, ?)""",
+                                   (guest3.Fullname, guest3.Doc, bookskey3, guest3.Born, guest3.Phone))
             if guest4.Fullname != '':
-                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born) 
-                                   VALUES (NULL, ?, ?, ?, ?)""",
-                                   (guest4.Fullname, guest4.Doc, bookskey4, guest4.Born))
+                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born, phone) 
+                                   VALUES (NULL, ?, ?, ?, ?, ?)""",
+                                   (guest4.Fullname, guest4.Doc, bookskey4, guest4.Born, guest4.Phone))
             if guest5.Fullname != '':
-                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born) 
-                                   VALUES (NULL, ?, ?, ?, ?)""",
-                                   (guest5.Fullname, guest5.Doc, bookskey5, guest5.Born))
+                self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born, phone) 
+                                   VALUES (NULL, ?, ?, ?, ?, ?)""",
+                                   (guest5.Fullname, guest5.Doc, bookskey5, guest5.Born, guest5.Phone))
             self.__cur.execute("""
                                 INSERT INTO roombooks(id, 
                                 guest1, fullpans1, halfpans1, breakfast1,
@@ -91,7 +91,7 @@ class DBSQL:
                                 guest3, fullpans3, halfpans3, breakfast3,
                                 guest4, fullpans4, halfpans4, breakfast4,
                                 guest5, fullpans5, halfpans5, breakfast5,
-                                room, datestart, dateend, tour, transfer, price, sumbook, comm) 
+                                room, datestart, dateend, tour, transfer, price, prep, sumbook, comm) 
                                 VALUES(NULL, 
                                 (SELECT id FROM guests WHERE fio = ? AND fiodocid = ?),
                                 ?, ?, ?,
@@ -103,7 +103,7 @@ class DBSQL:
                                 ?, ?, ?,
                                 (SELECT id FROM guests WHERE fio = ? AND fiodocid = ?), 
                                 ?, ?, ?,
-                                ?, ?, ?, ?, ?, ?, ?, ?)""",
+                                ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                                (guest1.Fullname, bookskey1,
                                 guest1.fullpans, guest1.halfpans, guest1.breakfast,
                                 guest2.Fullname, bookskey2,
@@ -114,7 +114,7 @@ class DBSQL:
                                 guest4.fullpans, guest4.halfpans, guest4.breakfast,
                                 guest5.Fullname, bookskey5,
                                 guest5.fullpans, guest5.halfpans, guest5.breakfast,
-                                room, sdate, edate, tour, transfer, price, sumbook, comm))
+                                room, sdate, edate, tour, transfer, price, prep, sumbook, comm))
         except Exception as e:
             print(e)
             return 0
@@ -157,6 +157,40 @@ class DBSQL:
         try:
             self.__cur.execute("""DELETE FROM roombooks WHERE id = ?""",
                                (numbook,))
+        except Exception as e:
+            print(e)
+            return 0
+        return []
+
+
+    def viewbook(self, numbook):
+        try:
+            self.__cur.execute("""SELECT fio, rb.fullpans1 f, rb.halfpans1 h, rb.breakfast1 b, doc, born, phone
+                                    FROM roombooks rb JOIN guests g on rb.guest1 = g.id WHERE rb.id = ?""",
+                               (numbook,))
+            rowguests = self.__cur.fetchall()
+            self.__cur.execute("""SELECT fio, rb.fullpans2 f, rb.halfpans2 h, rb.breakfast2 b, doc, born, phone 
+                                    FROM roombooks rb JOIN guests g on rb.guest2 = g.id WHERE rb.id = ?""",
+                               (numbook,))
+            rowguests += self.__cur.fetchall()
+            self.__cur.execute("""SELECT fio, rb.fullpans3 f, rb.halfpans3 h, rb.breakfast3 b, doc, born, phone
+                                    FROM roombooks rb JOIN guests g on rb.guest3 = g.id WHERE rb.id = ?""",
+                               (numbook,))
+            rowguests += self.__cur.fetchall()
+            self.__cur.execute("""SELECT fio, rb.fullpans4 f, rb.halfpans4 h, rb.breakfast4 b, doc, born, phone 
+                                    FROM roombooks rb JOIN guests g on rb.guest3 = g.id WHERE rb.id = ?""",
+                               (numbook,))
+            rowguests += self.__cur.fetchall()
+            self.__cur.execute("""SELECT fio, rb.fullpans5 f, rb.halfpans5 h, rb.breakfast5 b, doc, born, phone
+                                    FROM roombooks rb JOIN guests g on rb.guest3 = g.id WHERE rb.id = ?""",
+                               (numbook,))
+            rowguests += self.__cur.fetchall()
+            self.__cur.execute("""SELECT room, datestart ds, dateend de, tour, transfer, price, prep, sumbook, comm 
+                                    FROM roombooks rb WHERE rb.id = ?""",
+                               (numbook,))
+            rowinfo = self.__cur.fetchall()
+            if rowguests and rowinfo:
+                return list(rowguests), list(rowinfo)
         except Exception as e:
             print(e)
             return 0
