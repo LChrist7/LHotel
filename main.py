@@ -178,7 +178,6 @@ def check():
 @app.route("/change", methods=["POST", "GET"])
 def change():
     if request.method == 'POST' and 'numchange' in request.form and request.form['numchange']:
-        print(request.form)
         db = get_db()
         dbase = DBSQL.DBSQL(db)
         context = list(dbase.viewbook(request.form['numchange']))
@@ -238,7 +237,6 @@ def change():
 @app.route("/", methods=["POST", "GET"])
 def index():
     if request.method == 'POST' and 'FullName1' in request.form:
-        print(2)
         sumbook = (datetime.fromisoformat(request.form['DateEnd'].replace('T', ' ')).date() -
                    datetime.fromisoformat(request.form['DateStart'].replace('T', ' ')).date()).days * int(
             request.form['Price'])
@@ -264,12 +262,10 @@ def index():
             tour = 1
         else:
             tour = 0
-        print(3)
         resadd = dbase.addbook(request.form['Numbook'], guest1, guest2, guest3, guest4, guest5,
                                startdatedef, enddatedef, request.form['Room'],
                                tour, transfer, request.form['Price'], request.form['Prep'],
                                sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
-        print(4)
         db.commit()
         db.close()
         if resadd == 1:
