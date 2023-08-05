@@ -19,7 +19,6 @@ class DBSQL:
 
     def makesearchonadd(self, dates, datee, room):
         try:
-            print(dates, datee, room)
             self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (select roombooks.room 
                                from roombooks where (? between roombooks.datestart and roombooks.dateend or 
                                ? between roombooks.datestart and roombooks.dateend)) 
@@ -27,19 +26,16 @@ class DBSQL:
                                 ORDER BY rooms.number""",
                                (dates, datee, room))
             res = [item['number'] for item in self.__cur.fetchall()]
-            print(res)
             if str(res[0]) == str(room):
                 return 0
             else:
                 return 1
         except Exception as e:
-            print(0.3)
             print(e)
             return 1
 
     def makesearchonupdate(self, dates, datee, numbook, room):
         try:
-            print(dates, datee, numbook, room)
             self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (select roombooks.room 
                                from roombooks where (? between roombooks.datestart and roombooks.dateend or 
                                ? between roombooks.datestart and roombooks.dateend) and roombooks.numbook != ?) 
@@ -47,13 +43,11 @@ class DBSQL:
                                 ORDER BY rooms.number""",
                                (dates, datee, numbook, room))
             res = [item['number'] for item in self.__cur.fetchall()]
-            print(res)
             if str(res[0]) == str(room):
                 return 0
             else:
                 return 1
         except Exception as e:
-            print(0.3)
             print(e)
             return 1
 
@@ -147,19 +141,14 @@ class DBSQL:
 
     def updatebook(self, numbook, guest1, guest2, guest3, guest4, guest5,
                    sdate, edate, room, tour, transfer, price, prep, sumbook, sdatewl, edatewl, comm):
-        print(type(numbook), guest1, guest2, guest3, guest4, guest5,
-              type(sdate), type(edate), type(room), type(tour), type(transfer), type(price), type(prep),
-              type(sumbook), type(sdatewl), type(edatewl), type(comm))
         try:
-            print(1.1)
             rescheck = self.makesearchonupdate(sdatewl, edatewl, numbook, room)
-            if rescheck == 0:
+            if rescheck == 1:
                 return 1
         except Exception as e:
             print(e)
             return 1
         try:
-            print(1.2)
             bookskey1 = (guest1.Fullname + guest1.Born).replace(' ', '')
             bookskey2 = (guest2.Fullname + guest2.Born).replace(' ', '')
             bookskey3 = (guest3.Fullname + guest3.Born).replace(' ', '')
@@ -185,7 +174,6 @@ class DBSQL:
                 self.__cur.execute("""INSERT INTO guests (id, fio, doc, fiodocid, born, phone) 
                                    VALUES (NULL, ?, ?, ?, ?, ?)""",
                                    (guest5.Fullname, guest5.Doc, bookskey5, guest5.Born, guest5.Phone))
-            print(1.3)
             self.__cur.execute("""
                                 UPDATE roombooks
                                 SET numbook = ?,
@@ -272,7 +260,7 @@ class DBSQL:
 
     def bookcancel(self, numbook):
         try:
-            self.__cur.execute("""DELETE FROM roombooks WHERE id = ?""",
+            self.__cur.execute("""DELETE FROM roombooks WHERE numbook = ?""",
                                (numbook,))
         except Exception as e:
             print(e)
