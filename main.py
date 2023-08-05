@@ -117,6 +117,7 @@ def check():
         db.close()
         letters = list(string.ascii_uppercase)
         letters.extend([i + b for i in letters for b in letters])
+        sheetall.column_dimensions['C'].width = 14
         sheetall.column_dimensions['B'].width = 45
         sheetall.column_dimensions['C'].width = 12
         sheetall.column_dimensions['D'].width = 20

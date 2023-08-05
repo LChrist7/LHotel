@@ -238,7 +238,7 @@ class DBSQL:
 
     def checkall(self, ds, de):
         try:
-            self.__cur.execute("""SELECT rb.id, gu.fio, rb.room, gu.born, rb.price, rb.sumbook, 
+            self.__cur.execute("""SELECT rb.numbook, gu.fio, rb.room, gu.born, rb.price, rb.sumbook, 
                                 rb.guest1, rb.guest2, rb.guest3, rb.guest4, rb.guest5,
                                 (rb.fullpans1 + rb.fullpans2 + rb.fullpans3 + rb.fullpans4 + rb.fullpans5) as fullpans, 
                                 (rb.halfpans1 + rb.halfpans2 + rb.halfpans3 + rb.halfpans4 + rb.halfpans5) as halfpans,
