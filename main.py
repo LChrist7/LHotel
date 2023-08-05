@@ -82,9 +82,10 @@ def check():
         delta = timedelta(days=1)
         alldelta = end_date - start_date
         alldelta = alldelta.days
+        memfio = ''
         for j in letters[0:alldelta + 1]:
             sheet[j + str(1)] = str(start_date)
-            sheet.column_dimensions[j].width = 15
+            sheet.column_dimensions[j].width = 20
             start_date += delta
         for m in range(2, len(rooms) + 2):
             for j in letters[0:alldelta + 1]:
@@ -92,14 +93,27 @@ def check():
                 datev = sheet[j + str(1)].value
                 sqlres = dbase.makecheck(datev, roomv)
                 if sqlres and len(sqlres) == 1:
-                    red_background = PatternFill(fill_type='solid', fgColor="FFC7CE")
-                    sheet[j + str(m)] = sqlres[0].split(" ")[0]
-                    sheet[j + str(m)].fill = red_background
+                    if sqlres[0]['tour'] == 1:
+                        background = PatternFill(fill_type='solid', fgColor="9FC5E8")
+                    else:
+                        background = PatternFill(fill_type='solid', fgColor="FFC7CE")
+                    try:
+                        if sqlres[0]['fio'] != '' and sheet[j + str(m)].value is None:
+                            sheet[j + str(m)] = sqlres[0]['numbook'] + ' ' + sqlres[0]['fio'].split(" ")[0]
+                            sheet[j + str(m)].fill = background
+                            # sheet.merge_cells(str(j + str(m)) + ':' + str(letters[letters.index(j)
+                            #                                                     + int(sqlres[0]['days'])] + str(m)))
+                    except AttributeError as e:
+                        print(e)
                 if sqlres and len(sqlres) == 2:
                     sheet.column_dimensions[j].width = 23
-                    red_background = PatternFill(fill_type='solid', fgColor="FFC7CE")
-                    sheet[j + str(m)] = sqlres[0].split(" ")[0] + ' - ' + sqlres[1].split(" ")[0]
-                    sheet[j + str(m)].fill = red_background
+                    if sqlres[1]['tour'] == 1:
+                        background = PatternFill(fill_type='solid', fgColor="9FC5E8")
+                    else:
+                        background = PatternFill(fill_type='solid', fgColor="FFC7CE")
+                    sheet[j + str(m)] = (sqlres[0]['numbook'] + ' ' + sqlres[0]['fio'].split(" ")[0] +
+                                         ' - ' + sqlres[1]['numbook'] + ' ' + sqlres[1]['fio'].split(" ")[0])
+                    sheet[j + str(m)].fill = background
         try:
             workbook.save(filename="График.xlsx")
             db.close()
@@ -219,9 +233,9 @@ def change():
         else:
             tour = 0
         resadd = dbase.updatebook(request.form['numchange2'], guest1, guest2, guest3, guest4, guest5,
-                               startdatedef, enddatedef, request.form['Room'],
-                               tour, transfer, request.form['Price'], request.form['Prep'],
-                               sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
+                                  startdatedef, enddatedef, request.form['Room'],
+                                  tour, transfer, request.form['Price'], request.form['Prep'],
+                                  sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
         db.commit()
         db.close()
         if resadd == 1:

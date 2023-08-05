@@ -53,15 +53,18 @@ class DBSQL:
 
     def makecheck(self, datebook, roombook):
         try:
-            self.__cur.execute("""SELECT guests.fio FROM roombooks
+            self.__cur.execute("""SELECT guests.fio, 
+                                round(julianday(roombooks.dateend)) - round(julianday(?)) days, 
+                                numbook, tour 
+                                FROM roombooks
                                 join guests on guests.id = roombooks.guest1
                                 WHERE ((? between strftime('%Y-%m-%d',roombooks.datestart)
                                 and strftime('%Y-%m-%d',roombooks.dateend)) and room = ?)
                                 ORDER BY strftime('%d',roombooks.datestart)""",
-                               (datebook, roombook))
-            res = [item['fio'] for item in self.__cur.fetchall()]
-            if res:
-                return res
+                               (datebook, datebook, roombook))
+            rowbook = self.__cur.fetchall()
+            if rowbook:
+                return list(rowbook)
         except Exception as e:
             print(e)
             return 0
