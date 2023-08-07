@@ -5,7 +5,6 @@
     </div>
     <head>
         <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
-        <link href="{{ url_for('static', filename='images/abh.jpg') }}" rel="stylesheet">
         <style>
             .img-blur{
             position: absolute;
@@ -15,7 +14,6 @@
             background-size: cover;
             background-position: center;
             filter: blur(4px);
-            background: url("{{ url_for('static',filename='images/abh.jpg') }}");
             }
         </style>
         <title>Отель</title>
@@ -33,6 +31,9 @@
         <h1 class="h1new">Новое бронирование</h1>
         <form action="/" method="post" class="form-newguest" id="form1">
             <div class="divguests">
+                <p><label>Номер брони:</label>
+                    <input class="ccomm" type="text" name="Numbook" id="Numbook" >
+                </p>
                 <label for="range">Кол-во гостей:</label>
                 <output id="numg" class="outguests">1</output>
                 <p><input type="range" id="range" min="1" max="5" name="range" class="range"
@@ -113,20 +114,20 @@
             </div>
             <div class="divinfo2">
                 <p><label>Комната</label> <input class="croom" type="number" name="Room" value="101" />
-                <p><label>Дата заезда</label>
-                    <input type="datetime-local" name="DateStart" oninput="sumFunc(DateStart, DateEnd, Price)" value="" > </p>
-                <p><label>Дата выезда</label>
+                    <label>Дата заезда</label>
+                    <input type="datetime-local" name="DateStart" oninput="sumFunc(DateStart, DateEnd, Price)" value="" >
+                    <label>Дата выезда</label>
                     <input type="datetime-local" name="DateEnd" oninput="sumFunc(DateStart, DateEnd, Price)" value="" > </p>
                 <p><label for="Tour">Туроператор</label>
                     <input type="checkbox" name="Tour" id = "Tour"/>
-                </p>
-                <p><label for="Transfer">Трансфер</label>
+
+                    <label for="Transfer">Трансфер</label>
                     <input type="checkbox" name="Transfer" id = "Transfer"/>
                 </p>
                 <p><label>Цена</label>
                     <input class="cpr" type="number" name="Price" oninput="sumFunc(DateStart, DateEnd, Price)" value=0 >
-                руб.</p>
-                <p><label>Предоплата</label>
+                руб.
+                <label>Предоплата</label>
                     <input class="cpr" type="number" name="Prep"  value=0 >
                 руб.</p>
                 <p>Сумма: <output id="Sum" name = "Sum" > 0 </output> руб. </p>

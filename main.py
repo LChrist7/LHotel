@@ -82,9 +82,10 @@ def check():
         delta = timedelta(days=1)
         alldelta = end_date - start_date
         alldelta = alldelta.days
+        memfio = ''
         for j in letters[0:alldelta + 1]:
             sheet[j + str(1)] = str(start_date)
-            sheet.column_dimensions[j].width = 15
+            sheet.column_dimensions[j].width = 20
             start_date += delta
         for m in range(2, len(rooms) + 2):
             for j in letters[0:alldelta + 1]:
@@ -92,14 +93,27 @@ def check():
                 datev = sheet[j + str(1)].value
                 sqlres = dbase.makecheck(datev, roomv)
                 if sqlres and len(sqlres) == 1:
-                    red_background = PatternFill(fill_type='solid', fgColor="FFC7CE")
-                    sheet[j + str(m)] = sqlres[0].split(" ")[0]
-                    sheet[j + str(m)].fill = red_background
+                    if sqlres[0]['tour'] == 1:
+                        background = PatternFill(fill_type='solid', fgColor="9FC5E8")
+                    else:
+                        background = PatternFill(fill_type='solid', fgColor="FFC7CE")
+                    try:
+                        if sqlres[0]['fio'] != '' and sheet[j + str(m)].value is None:
+                            sheet[j + str(m)] = sqlres[0]['numbook'] + ' ' + sqlres[0]['fio'].split(" ")[0]
+                            sheet[j + str(m)].fill = background
+                            # sheet.merge_cells(str(j + str(m)) + ':' + str(letters[letters.index(j)
+                            #                                                     + int(sqlres[0]['days'])] + str(m)))
+                    except AttributeError as e:
+                        print(e)
                 if sqlres and len(sqlres) == 2:
                     sheet.column_dimensions[j].width = 23
-                    red_background = PatternFill(fill_type='solid', fgColor="FFC7CE")
-                    sheet[j + str(m)] = sqlres[0].split(" ")[0] + ' - ' + sqlres[1].split(" ")[0]
-                    sheet[j + str(m)].fill = red_background
+                    if sqlres[1]['tour'] == 1:
+                        background = PatternFill(fill_type='solid', fgColor="9FC5E8")
+                    else:
+                        background = PatternFill(fill_type='solid', fgColor="FFC7CE")
+                    sheet[j + str(m)] = (sqlres[0]['numbook'] + ' ' + sqlres[0]['fio'].split(" ")[0] +
+                                         ' - ' + sqlres[1]['numbook'] + ' ' + sqlres[1]['fio'].split(" ")[0])
+                    sheet[j + str(m)].fill = background
         try:
             workbook.save(filename="График.xlsx")
             db.close()
@@ -117,6 +131,7 @@ def check():
         db.close()
         letters = list(string.ascii_uppercase)
         letters.extend([i + b for i in letters for b in letters])
+        sheetall.column_dimensions['C'].width = 14
         sheetall.column_dimensions['B'].width = 45
         sheetall.column_dimensions['C'].width = 12
         sheetall.column_dimensions['D'].width = 20
@@ -176,7 +191,7 @@ def check():
 
 @app.route("/change", methods=["POST", "GET"])
 def change():
-    if request.method == 'POST' and 'numchange' in request.form:
+    if request.method == 'POST' and 'numchange' in request.form and request.form['numchange']:
         db = get_db()
         dbase = DBSQL.DBSQL(db)
         context = list(dbase.viewbook(request.form['numchange']))
@@ -191,27 +206,42 @@ def change():
                                guest4=(dict(guests[3]) if len(guests) > 3 else []),
                                guest5=(dict(guests[4]) if len(guests) > 4 else []),
                                info=dict(info[0]), sumdiff=int(info[0]['sumbook'] - info[0]['prep']))
-    if request.method == 'POST' and 'FullName1' in request.form:
-        # db = get_db()
-        # dbase = DBSQL.DBSQL(db)
-        # guest1 = gclass.GClass()
-        # guest2 = gclass.GClass()
-        # guest3 = gclass.GClass()
-        # guest4 = gclass.GClass()
-        # guest5 = gclass.GClass()
-        # guest1.createguest1(request.form)
-        # guest2.createguest2(request.form)
-        # guest3.createguest3(request.form)
-        # guest4.createguest4(request.form)
-        # guest5.createguest5(request.form)
-        # if 'Transfer' in request.form and request.form['Transfer'] == 'on':
-        #     transfer = 1
-        # else:
-        #     transfer = 0
-        # if 'Tour' in request.form and request.form['Tour'] == 'on':
-        #     tour = 1
-        # else:
-        #     tour = 0
+    if request.method == 'POST' and 'FullName1' in request.form and request.form['FullName1']:
+        db = get_db()
+        dbase = DBSQL.DBSQL(db)
+        sumbook = (datetime.fromisoformat(request.form['DateEnd'].replace('T', ' ')).date() -
+                   datetime.fromisoformat(request.form['DateStart'].replace('T', ' ')).date()).days * int(
+            request.form['Price'])
+        startdatedef = datetime.fromisoformat(request.form['DateStart'].replace('T', ' '))
+        enddatedef = datetime.fromisoformat(request.form['DateEnd'].replace('T', ' '))
+        guest1 = gclass.GClass()
+        guest2 = gclass.GClass()
+        guest3 = gclass.GClass()
+        guest4 = gclass.GClass()
+        guest5 = gclass.GClass()
+        guest1.createguest1(request.form)
+        guest2.createguest2(request.form)
+        guest3.createguest3(request.form)
+        guest4.createguest4(request.form)
+        guest5.createguest5(request.form)
+        if 'Transfer' in request.form and request.form['Transfer'] == 'on':
+            transfer = 1
+        else:
+            transfer = 0
+        if 'Tour' in request.form and request.form['Tour'] == 'on':
+            tour = 1
+        else:
+            tour = 0
+        resadd = dbase.updatebook(request.form['numchange2'], guest1, guest2, guest3, guest4, guest5,
+                                  startdatedef, enddatedef, request.form['Room'],
+                                  tour, transfer, request.form['Price'], request.form['Prep'],
+                                  sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
+        db.commit()
+        db.close()
+        if resadd == 1:
+            return '<h2>Бронь не может быть создана. Комната занята в эти даты</h2>'
+        if resadd == 0:
+            return '<h2>Бронь не может быть создана. Произошла ошибка</h2>'
         return redirect("/change")
     else:
         return render_template('change.html', guest1=[], guest2=[], guest3=[], guest4=[], guest5=[],
@@ -246,7 +276,7 @@ def index():
             tour = 1
         else:
             tour = 0
-        resadd = dbase.addbook(guest1, guest2, guest3, guest4, guest5,
+        resadd = dbase.addbook(request.form['Numbook'], guest1, guest2, guest3, guest4, guest5,
                                startdatedef, enddatedef, request.form['Room'],
                                tour, transfer, request.form['Price'], request.form['Prep'],
                                sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
@@ -263,4 +293,4 @@ def index():
 
 if __name__ == '__main__':
     webbrowser.open('http://127.0.0.1:5000/')
-    app.run(debug=True)
+    app.run()
