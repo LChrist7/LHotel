@@ -60,6 +60,7 @@ class DBSQL:
                                 join guests on guests.id = roombooks.guest1
                                 WHERE ((? between strftime('%Y-%m-%d',roombooks.datestart)
                                 and strftime('%Y-%m-%d',roombooks.dateend)) and room = ?)
+                                GROUP BY guests.fio
                                 ORDER BY strftime('%d',roombooks.datestart)""",
                                (datebook, datebook, roombook))
             rowbook = self.__cur.fetchall()
