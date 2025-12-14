@@ -291,6 +291,60 @@ def index():
         return render_template('index.html')
 
 
+@app.route("/seasons", methods=["GET", "POST"])
+def seasons():
+    db = get_db()
+    dbase = DBSQL.DBSQL(db)
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'add':
+            name = request.form.get('name')
+            start_date = request.form.get('start_date')
+            end_date = request.form.get('end_date')
+            price_modifier = float(request.form.get('price_modifier', 1.0))
+            dbase.add_season(name, start_date, end_date, price_modifier)
+            db.commit()
+
+        elif action == 'update':
+            season_id = int(request.form.get('season_id'))
+            name = request.form.get('name')
+            start_date = request.form.get('start_date')
+            end_date = request.form.get('end_date')
+            price_modifier = float(request.form.get('price_modifier', 1.0))
+            dbase.update_season(season_id, name, start_date, end_date, price_modifier)
+            db.commit()
+
+        elif action == 'delete':
+            season_id = int(request.form.get('season_id'))
+            dbase.delete_season(season_id)
+            db.commit()
+
+        return redirect('/seasons')
+
+    seasons_list = dbase.get_seasons()
+    return render_template('seasons.html', seasons=seasons_list)
+
+
+@app.route("/api/seasonal-price", methods=["POST"])
+def api_seasonal_price():
+    """API для расчёта цены с учётом сезонов"""
+    import json
+    db = get_db()
+    dbase = DBSQL.DBSQL(db)
+
+    data = request.get_json() if request.is_json else request.form
+    base_price = float(data.get('price', 0))
+    start_date = data.get('start_date', '')
+    end_date = data.get('end_date', '')
+
+    if base_price and start_date and end_date:
+        total = dbase.calculate_seasonal_price(base_price, start_date, end_date)
+        return json.dumps({'total': total})
+    return json.dumps({'total': 0})
+
+
 @app.route("/stats", methods=["GET", "POST"])
 def stats():
     today = date.today()

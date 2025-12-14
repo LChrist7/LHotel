@@ -2,6 +2,119 @@ class DBSQL:
     def __init__(self, db):
         self.__db = db
         self.__cur = db.cursor()
+        self._ensure_seasons_table()
+
+    def _ensure_seasons_table(self):
+        """Создаёт таблицу сезонов, если её нет"""
+        try:
+            self.__cur.execute("""
+                CREATE TABLE IF NOT EXISTS seasons (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    start_date DATE NOT NULL,
+                    end_date DATE NOT NULL,
+                    price_modifier REAL NOT NULL DEFAULT 1.0
+                )
+            """)
+            self.__db.commit()
+        except Exception as e:
+            print(e)
+
+    def get_seasons(self):
+        """Получить все сезоны"""
+        try:
+            self.__cur.execute("""
+                SELECT id, name, start_date, end_date, price_modifier
+                FROM seasons
+                ORDER BY start_date
+            """)
+            return [dict(r) for r in self.__cur.fetchall()]
+        except Exception as e:
+            print(e)
+            return []
+
+    def add_season(self, name, start_date, end_date, price_modifier):
+        """Добавить новый сезон"""
+        try:
+            self.__cur.execute("""
+                INSERT INTO seasons (name, start_date, end_date, price_modifier)
+                VALUES (?, ?, ?, ?)
+            """, (name, start_date, end_date, price_modifier))
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def update_season(self, season_id, name, start_date, end_date, price_modifier):
+        """Обновить сезон"""
+        try:
+            self.__cur.execute("""
+                UPDATE seasons
+                SET name = ?, start_date = ?, end_date = ?, price_modifier = ?
+                WHERE id = ?
+            """, (name, start_date, end_date, price_modifier, season_id))
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def delete_season(self, season_id):
+        """Удалить сезон"""
+        try:
+            self.__cur.execute("DELETE FROM seasons WHERE id = ?", (season_id,))
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def get_season_for_date(self, check_date):
+        """Получить сезон для указанной даты"""
+        try:
+            self.__cur.execute("""
+                SELECT name, price_modifier
+                FROM seasons
+                WHERE ? BETWEEN start_date AND end_date
+                LIMIT 1
+            """, (check_date,))
+            result = self.__cur.fetchone()
+            if result:
+                return dict(result)
+            return {'name': 'Базовый', 'price_modifier': 1.0}
+        except Exception as e:
+            print(e)
+            return {'name': 'Базовый', 'price_modifier': 1.0}
+
+    def calculate_seasonal_price(self, base_price, start_date, end_date):
+        """Рассчитать цену с учётом сезонов"""
+        try:
+            from datetime import datetime, timedelta
+
+            if isinstance(start_date, str):
+                start = datetime.strptime(start_date[:10], '%Y-%m-%d').date()
+            else:
+                start = start_date.date() if hasattr(start_date, 'date') else start_date
+
+            if isinstance(end_date, str):
+                end = datetime.strptime(end_date[:10], '%Y-%m-%d').date()
+            else:
+                end = end_date.date() if hasattr(end_date, 'date') else end_date
+
+            total_price = 0
+            current = start
+            delta = timedelta(days=1)
+
+            while current < end:
+                season = self.get_season_for_date(str(current))
+                daily_price = base_price * season['price_modifier']
+                total_price += daily_price
+                current += delta
+
+            return round(total_price, 2)
+        except Exception as e:
+            print(e)
+            # Возвращаем простой расчёт без сезонов
+            days = (end - start).days if hasattr(end, '__sub__') else 1
+            return base_price * days
 
     def makesearch(self, sstart, sdend):
         try:
