@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LHotel{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <span class="logo-icon">🏨</span>
+                    <span class="logo-text">LHotel</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/" class="nav-item {% if request.endpoint == 'index' %}active{% endif %}">
+                    <span class="nav-icon">📝</span>
+                    <span class="nav-text">Новая бронь</span>
+                </a>
+                <a href="/change" class="nav-item {% if request.endpoint == 'change' %}active{% endif %}">
+                    <span class="nav-icon">🔍</span>
+                    <span class="nav-text">О брони</span>
+                </a>
+                <a href="/search" class="nav-item {% if request.endpoint == 'search' %}active{% endif %}">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">Свободные номера</span>
+                </a>
+                <a href="/cancel" class="nav-item {% if request.endpoint == 'cancel' %}active{% endif %}">
+                    <span class="nav-icon">❌</span>
+                    <span class="nav-text">Отмена брони</span>
+                </a>
+
+                <div class="nav-divider"></div>
+                <div class="nav-section-title">Аналитика</div>
+
+                <a href="/calendar" class="nav-item {% if request.endpoint == 'calendar' %}active{% endif %}">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-text">Календарь</span>
+                </a>
+                <a href="/stats" class="nav-item {% if request.endpoint == 'stats' %}active{% endif %}">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Статистика</span>
+                </a>
+                <a href="/check" class="nav-item {% if request.endpoint == 'check' %}active{% endif %}">
+                    <span class="nav-icon">📥</span>
+                    <span class="nav-text">Отчёты Excel</span>
+                </a>
+
+                <div class="nav-divider"></div>
+                <div class="nav-section-title">Настройки</div>
+
+                <a href="/seasons" class="nav-item {% if request.endpoint == 'seasons' %}active{% endif %}">
+                    <span class="nav-icon">🌡️</span>
+                    <span class="nav-text">Сезоны и цены</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                <div class="header-actions">
+                    {% block header_actions %}{% endblock %}
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,32 +1,27 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
-        <title>Отель</title>
-    </head>
-    <body>
-        <div class="bg-ex-blur">
-            <div class="img-blur"></div>
+{% extends "base.html" %}
+
+{% block title %}Отмена брони - LHotel{% endblock %}
+
+{% block page_title %}Отмена бронирования{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px;">
+    <div class="card-header">
+        <h3 class="card-title">Отменить бронирование</h3>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-warning mb-5">
+            <strong>Внимание!</strong> Отмена бронирования необратима. Убедитесь, что вводите правильный номер брони.
         </div>
-        <nav class="top-menu">
-            <ul class="menu-main">
-                <li><a href="/" >Новая бронь</a></li>
-                <li><a href="/change">О брони</a></li>
-                <li><a href="/search">Проверка номеров</a></li>
-                <li><a href="/cancel" class="current">Отмена брони</a></li>
-                <li><a href="/check">Отчеты</a></li>
-                <li><a href="/calendar">Календарь</a></li>
-                <li><a href="/stats">Статистика</a></li>
-                <li><a href="/seasons">Сезоны</a></li>
-            </ul>
-        </nav>
-        <div class="divcancel">
-            <h1 class="h1search">Отмена бронирования</h1>
-            <form action="/cancel" method="post" class="formcancel" id="formcancel">
-                <p><label>Номер брони:</label>
-                <input type="text" name="numcancel" id="numcancel" value="" > </p>
-                <p><input type="submit" value = "Отмена"></p>
-            </form>
-        </div>
-    </body>
-</html>
+        <form action="/cancel" method="post">
+            <div class="form-group">
+                <label class="form-label">Номер брони для отмены</label>
+                <input type="text" name="numcancel" id="numcancel" placeholder="Введите номер брони..." required>
+            </div>
+            <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('Вы уверены, что хотите отменить эту бронь?')">
+                Отменить бронирование
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

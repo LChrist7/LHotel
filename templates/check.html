@@ -1,47 +1,60 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
-        <title>Отель</title>
-    </head>
-    <body>
-        <div class="bg-ex-blur">
-            <div class="img-blur"></div>
+{% extends "base.html" %}
+
+{% block title %}Отчёты - LHotel{% endblock %}
+
+{% block page_title %}Выгрузка отчётов{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
+    <!-- График занятости -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📊 График занятости</h3>
         </div>
-        <nav class="top-menu">
-            <ul class="menu-main">
-                <li><a href="/" >Новая бронь</a></li>
-                <li><a href="/change">О брони</a></li>
-                <li><a href="/search">Проверка номеров</a></li>
-                <li><a href="/cancel">Отмена брони</a></li>
-                <li><a href="/check" class="current">Отчеты</a></li>
-                <li><a href="/calendar">Календарь</a></li>
-                <li><a href="/stats">Статистика</a></li>
-                <li><a href="/seasons">Сезоны</a></li>
-            </ul>
-        </nav>
-        <div class="divcheck">
-            <h1 class="h1check">Выгрузка в Excel</h1>
-            <form action="/check" method="post" class="formcheck" id="formcheck">
-                <h2>
-                    Выгрузка графика
-                </h2>
-                <p><label>Начало периода:</label>
-                <input type="date" name="checkstart" id="checkstart" value="Date()" > </p>
-                <p><label>Конец периода:</label>
-                <input type="date" name="checkend" id="checkend" value="Date()" > </p>
-                <p><input type="submit" value = "Выгрузить"></p>
-            </form>
-            <form action="/check" method="post" class="formallcheck" id="formallcheck">
-                <h2>
-                    Выгрузка всех бронирований
-                </h2>
-                <p><label>Начало периода:</label>
-                <input type="date" name="allcheckstart" id="allcheckstart" value="Date()" > </p>
-                <p><label>Конец периода:</label>
-                <input type="date" name="allcheckend" id="allcheckend" value="Date()" > </p>
-                <p><input type="submit" value = "Выгрузить"></p>
+        <div class="card-body">
+            <p class="text-muted mb-4">Визуальный график занятости номеров по дням. Экспорт в Excel.</p>
+            <form action="/check" method="post">
+                <div class="form-group">
+                    <label class="form-label">Начало периода</label>
+                    <input type="date" name="checkstart" id="checkstart" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Конец периода</label>
+                    <input type="date" name="checkend" id="checkend" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    Выгрузить график
+                </button>
             </form>
         </div>
-    </body>
-</html>
+    </div>
+
+    <!-- Все бронирования -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📋 Все бронирования</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-muted mb-4">Полный список бронирований за период с информацией о гостях.</p>
+            <form action="/check" method="post">
+                <div class="form-group">
+                    <label class="form-label">Начало периода</label>
+                    <input type="date" name="allcheckstart" id="allcheckstart" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Конец периода</label>
+                    <input type="date" name="allcheckend" id="allcheckend" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    Выгрузить бронирования
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="info-box mt-5">
+    <h4>Информация</h4>
+    <p>Файлы сохраняются в папку с программой. Если файл открыт в Excel, закройте его перед новой выгрузкой.</p>
+</div>
+{% endblock %}

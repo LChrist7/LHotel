@@ -1,50 +1,76 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <link type="text/css" href="{{url_for('static', filename='css/styles.css')}}" rel="stylesheet">
-        <title>Отель</title>
-    </head>
-    <body>
-        <div class="bg-ex-blur">
-            <div class="img-blur"></div>
-        </div>
-        <nav class="top-menu">
-            <ul class="menu-main">
-                <li><a href="/" >Новая бронь</a></li>
-                <li><a href="/change">О брони</a></li>
-                <li><a href="/search" class="current">Проверка номеров</a></li>
-                <li><a href="/cancel">Отмена брони</a></li>
-                <li><a href="/check">Отчеты</a></li>
-                <li><a href="/calendar">Календарь</a></li>
-                <li><a href="/stats">Статистика</a></li>
-                <li><a href="/seasons">Сезоны</a></li>
-            </ul>
-        </nav>
-        <div class="divsearch">
-            <h1 class="h1search">Свободные номера</h1>
-            <form action="/search" method="post" class="formsearch" id="formsearch">
-                <p><label>Дата заезда:</label>
-                <input type="datetime-local" name="SearchStart" id="searchstart" value="Date()" > </p>
-                <p><label>Дата выезда:</label>
-                <input type="datetime-local" name="SearchEnd" id="searchend" value="Date()" > </p>
-                <p><input type="submit" value = "Проверить"></p>
-            </form>
-            {% for m in rooms -%}
-                <p>{{m}}</p>
-            {% endfor -%}
-        </div>
-        <script>
-            function resetv(form)   {
-                document.getElementById(form).reset()
-            }
+{% extends "base.html" %}
 
-            function sumFunc(start, end, price) {
-                let date1 = new Date(start.value)
-                let date2 = new Date(end.value)
-                var p = price.value
-                document.getElementById("Sum").innerHTML = (date2 - date1) / (3600000*24) * p;
-            }
-        </script>
+{% block title %}Свободные номера - LHotel{% endblock %}
 
-    </body>
-</html>
+{% block page_title %}Проверка свободных номеров{% endblock %}
+
+{% block content %}
+<div class="card mb-5">
+    <div class="card-header">
+        <h3 class="card-title">Выберите даты</h3>
+    </div>
+    <div class="card-body">
+        <form action="/search" method="post">
+            <div class="form-row form-row-3">
+                <div class="form-group">
+                    <label class="form-label">Дата заезда</label>
+                    <input type="datetime-local" name="SearchStart" id="searchstart" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Дата выезда</label>
+                    <input type="datetime-local" name="SearchEnd" id="searchend" required>
+                </div>
+                <div class="form-group flex items-center" style="padding-top: 24px;">
+                    <button type="submit" class="btn btn-primary btn-lg">Проверить доступность</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if rooms is defined %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Доступные номера</h3>
+        <span class="badge badge-success">{{ rooms|length }} номеров</span>
+    </div>
+    <div class="card-body">
+        {% if rooms %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px;">
+            {% for room in rooms %}
+            <div class="stat-card text-center" style="cursor: pointer;" onclick="selectRoom({{ room }})">
+                <div style="font-size: 32px; margin-bottom: 8px;">🚪</div>
+                <div class="stat-value">{{ room }}</div>
+                <div class="text-sm text-muted mt-2">Свободен</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center" style="padding: 40px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">😔</div>
+            <h3>Нет свободных номеров</h3>
+            <p class="text-muted">В выбранные даты все номера заняты</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center" style="padding: 60px;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+        <h3 class="mb-3">Выберите период</h3>
+        <p class="text-muted">Укажите даты заезда и выезда, чтобы увидеть свободные номера</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectRoom(roomNumber) {
+    if (confirm('Перейти к созданию брони для номера ' + roomNumber + '?')) {
+        window.location.href = '/?room=' + roomNumber;
+    }
+}
+</script>
+{% endblock %}
