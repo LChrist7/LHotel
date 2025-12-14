@@ -291,6 +291,27 @@ def index():
         return render_template('index.html')
 
 
+@app.route("/stats", methods=["GET", "POST"])
+def stats():
+    today = date.today()
+    # По умолчанию статистика за текущий год
+    if request.method == 'POST':
+        start_date = request.form.get('start_date', f'{today.year}-01-01')
+        end_date = request.form.get('end_date', str(today))
+    else:
+        start_date = request.args.get('start_date', f'{today.year}-01-01')
+        end_date = request.args.get('end_date', str(today))
+
+    db = get_db()
+    dbase = DBSQL.DBSQL(db)
+    statistics = dbase.get_statistics(start_date, end_date)
+
+    return render_template('stats.html',
+                           stats=statistics,
+                           start_date=start_date,
+                           end_date=end_date)
+
+
 @app.route("/calendar", methods=["GET", "POST"])
 def calendar():
     today = date.today()

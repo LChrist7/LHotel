@@ -277,6 +277,97 @@ class DBSQL:
             return 0
         return []
 
+    def get_statistics(self, start_date, end_date):
+        """Получить статистику за период"""
+        try:
+            stats = {}
+
+            # Общее количество бронирований и сумма
+            self.__cur.execute("""
+                SELECT COUNT(*) as total_bookings,
+                       COALESCE(SUM(sumbook), 0) as total_revenue,
+                       COALESCE(SUM(prep), 0) as total_prepaid,
+                       COALESCE(AVG(price), 0) as avg_price
+                FROM roombooks
+                WHERE datestart >= ? AND datestart <= ?
+            """, (start_date, end_date))
+            row = self.__cur.fetchone()
+            stats['total_bookings'] = row['total_bookings']
+            stats['total_revenue'] = row['total_revenue']
+            stats['total_prepaid'] = row['total_prepaid']
+            stats['avg_price'] = round(row['avg_price'], 2)
+
+            # Брони от туроператоров vs прямые
+            self.__cur.execute("""
+                SELECT tour, COUNT(*) as count
+                FROM roombooks
+                WHERE datestart >= ? AND datestart <= ?
+                GROUP BY tour
+            """, (start_date, end_date))
+            tour_stats = {0: 0, 1: 0}
+            for row in self.__cur.fetchall():
+                tour_stats[row['tour']] = row['count']
+            stats['direct_bookings'] = tour_stats[0]
+            stats['tour_bookings'] = tour_stats[1]
+
+            # Топ комнат по количеству бронирований
+            self.__cur.execute("""
+                SELECT room, COUNT(*) as count, SUM(sumbook) as revenue
+                FROM roombooks
+                WHERE datestart >= ? AND datestart <= ?
+                GROUP BY room
+                ORDER BY count DESC
+                LIMIT 10
+            """, (start_date, end_date))
+            stats['top_rooms'] = [dict(r) for r in self.__cur.fetchall()]
+
+            # Количество всех комнат для расчёта загрузки
+            self.__cur.execute("SELECT COUNT(*) as count FROM rooms")
+            total_rooms = self.__cur.fetchone()['count']
+
+            # Расчёт загрузки (сколько комнато-дней занято)
+            self.__cur.execute("""
+                SELECT SUM(
+                    julianday(MIN(dateend, ?)) - julianday(MAX(datestart, ?))
+                ) as booked_days
+                FROM roombooks
+                WHERE dateend > ? AND datestart < ?
+            """, (end_date, start_date, start_date, end_date))
+            result = self.__cur.fetchone()
+            booked_days = result['booked_days'] if result['booked_days'] else 0
+
+            # Общее количество доступных комнато-дней
+            from datetime import datetime
+            d1 = datetime.strptime(start_date, '%Y-%m-%d')
+            d2 = datetime.strptime(end_date, '%Y-%m-%d')
+            total_days = (d2 - d1).days + 1
+            total_room_days = total_rooms * total_days
+
+            if total_room_days > 0:
+                stats['occupancy'] = round((booked_days / total_room_days) * 100, 1)
+            else:
+                stats['occupancy'] = 0
+
+            stats['total_rooms'] = total_rooms
+            stats['total_days'] = total_days
+
+            # Статистика по месяцам
+            self.__cur.execute("""
+                SELECT strftime('%Y-%m', datestart) as month,
+                       COUNT(*) as bookings,
+                       SUM(sumbook) as revenue
+                FROM roombooks
+                WHERE datestart >= ? AND datestart <= ?
+                GROUP BY month
+                ORDER BY month
+            """, (start_date, end_date))
+            stats['monthly'] = [dict(r) for r in self.__cur.fetchall()]
+
+            return stats
+        except Exception as e:
+            print(e)
+            return {}
+
     def get_calendar_data(self, start_date, end_date):
         """Получить данные для календарного вида"""
         try:
