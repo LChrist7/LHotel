@@ -5,9 +5,12 @@ class DBSQL:
 
     def makesearch(self, sstart, sdend):
         try:
-            self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (select roombooks.room 
-                               from roombooks where (? between roombooks.datestart and roombooks.dateend or 
-                               ? between roombooks.datestart and roombooks.dateend)) ORDER BY rooms.number""",
+            # Правильная проверка пересечения интервалов:
+            # Два интервала [A,B] и [C,D] пересекаются если A < D AND B > C
+            self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (
+                               SELECT roombooks.room FROM roombooks
+                               WHERE ? < roombooks.dateend AND ? > roombooks.datestart
+                               ) ORDER BY rooms.number""",
                                (sstart, sdend))
             res = [item['number'] for item in self.__cur.fetchall()]
             if res:
@@ -19,11 +22,12 @@ class DBSQL:
 
     def makesearchonadd(self, dates, datee, room):
         try:
-            self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (select roombooks.room 
-                               from roombooks where (? between roombooks.datestart and roombooks.dateend or 
-                               ? between roombooks.datestart and roombooks.dateend)) 
-                               and rooms.number == ?
-                                ORDER BY rooms.number""",
+            # Проверяем, свободна ли конкретная комната в заданный период
+            self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (
+                               SELECT roombooks.room FROM roombooks
+                               WHERE ? < roombooks.dateend AND ? > roombooks.datestart
+                               ) AND rooms.number = ?
+                               ORDER BY rooms.number""",
                                (dates, datee, room))
             res = [item['number'] for item in self.__cur.fetchall()]
             if str(res[0]) == str(room):
@@ -36,11 +40,13 @@ class DBSQL:
 
     def makesearchonupdate(self, dates, datee, numbook, room):
         try:
-            self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (select roombooks.room 
-                               from roombooks where (? between roombooks.datestart and roombooks.dateend or 
-                               ? between roombooks.datestart and roombooks.dateend) and roombooks.numbook != ?) 
-                               and rooms.number == ?
-                                ORDER BY rooms.number""",
+            # Проверяем доступность комнаты, исключая текущую бронь
+            self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (
+                               SELECT roombooks.room FROM roombooks
+                               WHERE ? < roombooks.dateend AND ? > roombooks.datestart
+                               AND roombooks.numbook != ?
+                               ) AND rooms.number = ?
+                               ORDER BY rooms.number""",
                                (dates, datee, numbook, room))
             res = [item['number'] for item in self.__cur.fetchall()]
             if str(res[0]) == str(room):
@@ -285,12 +291,12 @@ class DBSQL:
                                     FROM roombooks rb JOIN guests g on rb.guest3 = g.id WHERE rb.numbook = ?""",
                                (numbook,))
             rowguests += self.__cur.fetchall()
-            self.__cur.execute("""SELECT fio, rb.fullpans4 f, rb.halfpans4 h, rb.breakfast4 b, doc, born, phone 
-                                    FROM roombooks rb JOIN guests g on rb.guest3 = g.id WHERE rb.numbook = ?""",
+            self.__cur.execute("""SELECT fio, rb.fullpans4 f, rb.halfpans4 h, rb.breakfast4 b, doc, born, phone
+                                    FROM roombooks rb JOIN guests g on rb.guest4 = g.id WHERE rb.numbook = ?""",
                                (numbook,))
             rowguests += self.__cur.fetchall()
             self.__cur.execute("""SELECT fio, rb.fullpans5 f, rb.halfpans5 h, rb.breakfast5 b, doc, born, phone
-                                    FROM roombooks rb JOIN guests g on rb.guest3 = g.id WHERE rb.numbook = ?""",
+                                    FROM roombooks rb JOIN guests g on rb.guest5 = g.id WHERE rb.numbook = ?""",
                                (numbook,))
             rowguests += self.__cur.fetchall()
             self.__cur.execute("""SELECT numbook, room, datestart ds, dateend de, tour, transfer, price, prep, sumbook, comm 
