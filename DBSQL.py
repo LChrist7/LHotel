@@ -277,6 +277,29 @@ class DBSQL:
             return 0
         return []
 
+    def get_calendar_data(self, start_date, end_date):
+        """Получить данные для календарного вида"""
+        try:
+            # Получаем все комнаты
+            self.__cur.execute("SELECT number FROM rooms ORDER BY number")
+            rooms = [item['number'] for item in self.__cur.fetchall()]
+
+            # Получаем все бронирования в указанном периоде
+            self.__cur.execute("""
+                SELECT rb.room, rb.datestart, rb.dateend, rb.numbook, rb.tour,
+                       g.fio as guest_name
+                FROM roombooks rb
+                LEFT JOIN guests g ON rb.guest1 = g.id
+                WHERE rb.datestart <= ? AND rb.dateend >= ?
+                ORDER BY rb.room, rb.datestart
+            """, (end_date, start_date))
+            bookings = self.__cur.fetchall()
+
+            return {'rooms': rooms, 'bookings': [dict(b) for b in bookings]}
+        except Exception as e:
+            print(e)
+            return {'rooms': [], 'bookings': []}
+
     def viewbook(self, numbook):
         try:
             self.__cur.execute("""SELECT fio, rb.fullpans1 f, rb.halfpans1 h, rb.breakfast1 b, doc, born, phone

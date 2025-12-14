@@ -291,6 +291,49 @@ def index():
         return render_template('index.html')
 
 
+@app.route("/calendar", methods=["GET", "POST"])
+def calendar():
+    today = date.today()
+    # По умолчанию показываем текущий месяц
+    if request.method == 'POST':
+        year = int(request.form.get('year', today.year))
+        month = int(request.form.get('month', today.month))
+    else:
+        year = int(request.args.get('year', today.year))
+        month = int(request.args.get('month', today.month))
+
+    # Первый и последний день месяца
+    first_day = date(year, month, 1)
+    if month == 12:
+        last_day = date(year + 1, 1, 1) - timedelta(days=1)
+    else:
+        last_day = date(year, month + 1, 1) - timedelta(days=1)
+
+    db = get_db()
+    dbase = DBSQL.DBSQL(db)
+    calendar_data = dbase.get_calendar_data(str(first_day), str(last_day))
+
+    # Формируем список дней месяца
+    days = []
+    current = first_day
+    while current <= last_day:
+        days.append(current)
+        current += timedelta(days=1)
+
+    # Названия месяцев
+    month_names = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                   'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+
+    return render_template('calendar.html',
+                           rooms=calendar_data['rooms'],
+                           bookings=calendar_data['bookings'],
+                           days=days,
+                           year=year,
+                           month=month,
+                           month_name=month_names[month],
+                           today=today)
+
+
 if __name__ == '__main__':
     webbrowser.open('http://127.0.0.1:5000/')
     app.run()
