@@ -189,11 +189,61 @@
     </div>
 </form>
 {% else %}
+<!-- Список актуальных броней -->
 <div class="card">
-    <div class="card-body text-center" style="padding: 60px;">
-        <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
-        <h3 class="mb-3">Введите номер брони</h3>
-        <p class="text-muted">Используйте поле поиска выше, чтобы найти бронирование</p>
+    <div class="card-header">
+        <h3 class="card-title">Брони текущего года</h3>
+        {% if bookings %}
+        <span class="badge badge-primary">{{ bookings|length }} записей</span>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if bookings %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>№ брони</th>
+                        <th>Гость</th>
+                        <th>Комната</th>
+                        <th>Заезд</th>
+                        <th>Выезд</th>
+                        <th>Сумма</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr>
+                        <td><strong>{{ booking.numbook }}</strong></td>
+                        <td>
+                            {{ booking.guest_name.split(' ')[0] if booking.guest_name else '—' }}
+                            {% if booking.tour == 1 %}
+                            <span class="badge badge-primary" style="font-size: 10px;">ТО</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ booking.room }}</td>
+                        <td>{{ booking.datestart[:10] if booking.datestart else '' }}</td>
+                        <td>{{ booking.dateend[:10] if booking.dateend else '' }}</td>
+                        <td>{{ booking.sumbook|int }} руб.</td>
+                        <td>
+                            <form action="/change" method="post" style="display: inline;">
+                                <input type="hidden" name="numchange" value="{{ booking.numbook }}">
+                                <button type="submit" class="btn btn-outline btn-sm">Открыть</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center" style="padding: 60px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+            <h3 class="mb-3">Нет броней</h3>
+            <p class="text-muted">Брони за текущий год не найдены</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endif %}

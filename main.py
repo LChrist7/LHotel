@@ -244,8 +244,11 @@ def change():
             return '<h2>Бронь не может быть создана. Произошла ошибка</h2>'
         return redirect("/change")
     else:
+        db = get_db()
+        dbase = DBSQL.DBSQL(db)
+        bookings = dbase.get_current_year_bookings()
         return render_template('change.html', guest1=[], guest2=[], guest3=[], guest4=[], guest5=[],
-                               info=[], sumdiff=0)
+                               info=[], sumdiff=0, bookings=bookings)
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -303,8 +306,9 @@ def seasons():
             name = request.form.get('name')
             start_date = request.form.get('start_date')
             end_date = request.form.get('end_date')
-            price_modifier = float(request.form.get('price_modifier', 1.0))
-            dbase.add_season(name, start_date, end_date, price_modifier)
+            base_price = float(request.form.get('base_price', 5000))
+            extra_person_price = float(request.form.get('extra_person_price', 1000))
+            dbase.add_season(name, start_date, end_date, base_price, extra_person_price)
             db.commit()
 
         elif action == 'update':
@@ -312,8 +316,9 @@ def seasons():
             name = request.form.get('name')
             start_date = request.form.get('start_date')
             end_date = request.form.get('end_date')
-            price_modifier = float(request.form.get('price_modifier', 1.0))
-            dbase.update_season(season_id, name, start_date, end_date, price_modifier)
+            base_price = float(request.form.get('base_price', 5000))
+            extra_person_price = float(request.form.get('extra_person_price', 1000))
+            dbase.update_season(season_id, name, start_date, end_date, base_price, extra_person_price)
             db.commit()
 
         elif action == 'delete':
@@ -329,19 +334,25 @@ def seasons():
 
 @app.route("/api/seasonal-price", methods=["POST"])
 def api_seasonal_price():
-    """API для расчёта цены с учётом сезонов"""
+    """API для расчёта цены с учётом сезонов и количества гостей"""
     import json
     db = get_db()
     dbase = DBSQL.DBSQL(db)
 
     data = request.get_json() if request.is_json else request.form
-    base_price = float(data.get('price', 0))
     start_date = data.get('start_date', '')
     end_date = data.get('end_date', '')
+    guest_count = int(data.get('guest_count', 2))
 
-    if base_price and start_date and end_date:
-        total = dbase.calculate_seasonal_price(base_price, start_date, end_date)
-        return json.dumps({'total': total})
+    if start_date and end_date:
+        total = dbase.calculate_seasonal_price(start_date, end_date, guest_count)
+        season = dbase.get_season_for_date(start_date)
+        return json.dumps({
+            'total': total,
+            'season_name': season['name'],
+            'base_price': season['base_price'],
+            'extra_person_price': season['extra_person_price']
+        })
     return json.dumps({'total': 0})
 
 
@@ -395,13 +406,61 @@ def calendar():
         days.append(current)
         current += timedelta(days=1)
 
+    # Подготавливаем данные для отображения с объединёнными ячейками
+    room_rows = {}
+    for room in calendar_data['rooms']:
+        room_rows[room] = []
+        day_idx = 0
+        while day_idx < len(days):
+            day = days[day_idx]
+            day_str = day.strftime('%Y-%m-%d')
+
+            # Ищем бронь на этот день для этой комнаты
+            booking_found = None
+            for booking in calendar_data['bookings']:
+                if booking['room'] == room:
+                    bstart = booking['datestart'][:10] if booking['datestart'] else ''
+                    bend = booking['dateend'][:10] if booking['dateend'] else ''
+                    if bstart <= day_str < bend:
+                        booking_found = booking
+                        break
+
+            if booking_found:
+                # Вычисляем colspan - сколько дней до конца брони (в пределах месяца)
+                bstart = booking_found['datestart'][:10]
+                bend = booking_found['dateend'][:10]
+                end_date = datetime.strptime(bend, '%Y-%m-%d').date()
+                # Ограничиваем концом месяца
+                end_in_month = min(end_date, last_day + timedelta(days=1))
+                colspan = (end_in_month - day).days
+
+                # Получаем фамилию
+                guest_name = booking_found.get('guest_name', '')
+                surname = guest_name.split(' ')[0] if guest_name else ''
+
+                room_rows[room].append({
+                    'type': 'booking',
+                    'colspan': colspan,
+                    'booking': booking_found,
+                    'surname': surname,
+                    'day': day
+                })
+                day_idx += colspan
+            else:
+                room_rows[room].append({
+                    'type': 'empty',
+                    'colspan': 1,
+                    'day': day
+                })
+                day_idx += 1
+
     # Названия месяцев
     month_names = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
                    'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
 
     return render_template('calendar.html',
                            rooms=calendar_data['rooms'],
-                           bookings=calendar_data['bookings'],
+                           room_rows=room_rows,
                            days=days,
                            year=year,
                            month=month,

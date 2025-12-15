@@ -5,17 +5,29 @@ class DBSQL:
         self._ensure_seasons_table()
 
     def _ensure_seasons_table(self):
-        """Создаёт таблицу сезонов, если её нет"""
+        """Создаёт таблицу сезонов, если её нет, или обновляет структуру"""
         try:
-            self.__cur.execute("""
-                CREATE TABLE IF NOT EXISTS seasons (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    start_date DATE NOT NULL,
-                    end_date DATE NOT NULL,
-                    price_modifier REAL NOT NULL DEFAULT 1.0
-                )
-            """)
+            # Проверяем, существует ли таблица и её структуру
+            self.__cur.execute("PRAGMA table_info(seasons)")
+            columns = [col[1] for col in self.__cur.fetchall()]
+
+            if not columns:
+                # Таблица не существует - создаём новую
+                self.__cur.execute("""
+                    CREATE TABLE seasons (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT NOT NULL,
+                        start_date DATE NOT NULL,
+                        end_date DATE NOT NULL,
+                        base_price REAL NOT NULL DEFAULT 5000,
+                        extra_person_price REAL NOT NULL DEFAULT 1000
+                    )
+                """)
+            elif 'price_modifier' in columns and 'base_price' not in columns:
+                # Старая структура - мигрируем
+                self.__cur.execute("ALTER TABLE seasons ADD COLUMN base_price REAL NOT NULL DEFAULT 5000")
+                self.__cur.execute("ALTER TABLE seasons ADD COLUMN extra_person_price REAL NOT NULL DEFAULT 1000")
+
             self.__db.commit()
         except Exception as e:
             print(e)
@@ -24,7 +36,7 @@ class DBSQL:
         """Получить все сезоны"""
         try:
             self.__cur.execute("""
-                SELECT id, name, start_date, end_date, price_modifier
+                SELECT id, name, start_date, end_date, base_price, extra_person_price
                 FROM seasons
                 ORDER BY start_date
             """)
@@ -33,26 +45,26 @@ class DBSQL:
             print(e)
             return []
 
-    def add_season(self, name, start_date, end_date, price_modifier):
+    def add_season(self, name, start_date, end_date, base_price, extra_person_price):
         """Добавить новый сезон"""
         try:
             self.__cur.execute("""
-                INSERT INTO seasons (name, start_date, end_date, price_modifier)
-                VALUES (?, ?, ?, ?)
-            """, (name, start_date, end_date, price_modifier))
+                INSERT INTO seasons (name, start_date, end_date, base_price, extra_person_price)
+                VALUES (?, ?, ?, ?, ?)
+            """, (name, start_date, end_date, base_price, extra_person_price))
             return True
         except Exception as e:
             print(e)
             return False
 
-    def update_season(self, season_id, name, start_date, end_date, price_modifier):
+    def update_season(self, season_id, name, start_date, end_date, base_price, extra_person_price):
         """Обновить сезон"""
         try:
             self.__cur.execute("""
                 UPDATE seasons
-                SET name = ?, start_date = ?, end_date = ?, price_modifier = ?
+                SET name = ?, start_date = ?, end_date = ?, base_price = ?, extra_person_price = ?
                 WHERE id = ?
-            """, (name, start_date, end_date, price_modifier, season_id))
+            """, (name, start_date, end_date, base_price, extra_person_price, season_id))
             return True
         except Exception as e:
             print(e)
@@ -71,7 +83,7 @@ class DBSQL:
         """Получить сезон для указанной даты"""
         try:
             self.__cur.execute("""
-                SELECT name, price_modifier
+                SELECT name, base_price, extra_person_price
                 FROM seasons
                 WHERE ? BETWEEN start_date AND end_date
                 LIMIT 1
@@ -79,13 +91,13 @@ class DBSQL:
             result = self.__cur.fetchone()
             if result:
                 return dict(result)
-            return {'name': 'Базовый', 'price_modifier': 1.0}
+            return {'name': 'Базовый', 'base_price': 5000, 'extra_person_price': 1000}
         except Exception as e:
             print(e)
-            return {'name': 'Базовый', 'price_modifier': 1.0}
+            return {'name': 'Базовый', 'base_price': 5000, 'extra_person_price': 1000}
 
-    def calculate_seasonal_price(self, base_price, start_date, end_date):
-        """Рассчитать цену с учётом сезонов"""
+    def calculate_seasonal_price(self, start_date, end_date, guest_count=2):
+        """Рассчитать цену с учётом сезонов и количества гостей"""
         try:
             from datetime import datetime, timedelta
 
@@ -105,7 +117,11 @@ class DBSQL:
 
             while current < end:
                 season = self.get_season_for_date(str(current))
-                daily_price = base_price * season['price_modifier']
+                # Базовая цена за 1-2 человек
+                daily_price = season['base_price']
+                # Доплата за каждого гостя свыше 2
+                if guest_count > 2:
+                    daily_price += (guest_count - 2) * season['extra_person_price']
                 total_price += daily_price
                 current += delta
 
@@ -114,7 +130,7 @@ class DBSQL:
             print(e)
             # Возвращаем простой расчёт без сезонов
             days = (end - start).days if hasattr(end, '__sub__') else 1
-            return base_price * days
+            return 5000 * days
 
     def makesearch(self, sstart, sdend):
         try:
@@ -503,6 +519,28 @@ class DBSQL:
         except Exception as e:
             print(e)
             return {'rooms': [], 'bookings': []}
+
+    def get_current_year_bookings(self):
+        """Получить актуальные брони текущего года"""
+        try:
+            from datetime import datetime
+            current_year = datetime.now().year
+            today = datetime.now().strftime('%Y-%m-%d')
+
+            self.__cur.execute("""
+                SELECT rb.numbook, rb.room, rb.datestart, rb.dateend,
+                       g.fio as guest_name, rb.tour, rb.sumbook
+                FROM roombooks rb
+                LEFT JOIN guests g ON rb.guest1 = g.id
+                WHERE strftime('%Y', rb.datestart) = ? OR strftime('%Y', rb.dateend) = ?
+                ORDER BY rb.datestart DESC
+                LIMIT 50
+            """, (str(current_year), str(current_year)))
+
+            return [dict(r) for r in self.__cur.fetchall()]
+        except Exception as e:
+            print(e)
+            return []
 
     def viewbook(self, numbook):
         try:
