@@ -16,7 +16,7 @@
         <form action="/cancel" method="post">
             <div class="form-group">
                 <label class="form-label">Номер брони для отмены</label>
-                <input type="text" name="numcancel" id="numcancel" placeholder="Введите номер брони..." required>
+                <input type="text" name="numcancel" id="numcancel" placeholder="Введите номер брони..." value="{{ numbook or '' }}" required>
             </div>
             <button type="submit" class="btn btn-danger btn-block btn-lg" onclick="return confirm('Вы уверены, что хотите отменить эту бронь?')">
                 Отменить бронирование

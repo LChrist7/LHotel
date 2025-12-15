@@ -60,7 +60,8 @@ def cancel():
         db.commit()
         db.close()
         return redirect("/cancel")
-    return render_template('cancel.html')
+    numbook = request.args.get('numbook', '')
+    return render_template('cancel.html', numbook=numbook)
 
 
 @app.route("/check", methods=["POST", "GET"])
