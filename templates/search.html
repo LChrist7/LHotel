@@ -14,7 +14,7 @@
             <div class="form-row form-row-3">
                 <div class="form-group">
                     <label class="form-label">Дата заезда</label>
-                    <input type="datetime-local" name="SearchStart" id="searchstart" required>
+                    <input type="datetime-local" name="SearchStart" id="searchstart" required onchange="onSearchStartChange()">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Дата выезда</label>
@@ -67,6 +67,27 @@
 
 {% block extra_js %}
 <script>
+function onSearchStartChange() {
+    const startInput = document.getElementById('searchstart');
+    const endInput = document.getElementById('searchend');
+
+    if (startInput.value) {
+        let startValue = startInput.value;
+
+        // Устанавливаем время 14:00 для заезда
+        if (startValue.includes('T')) {
+            const datePart = startValue.split('T')[0];
+            startInput.value = datePart + 'T14:00';
+        }
+
+        // Копируем дату в поле выезда с временем 12:00
+        if (!endInput.value) {
+            const datePart = startInput.value.split('T')[0];
+            endInput.value = datePart + 'T12:00';
+        }
+    }
+}
+
 function selectRoom(roomNumber) {
     if (confirm('Перейти к созданию брони для номера ' + roomNumber + '?')) {
         window.location.href = '/?room=' + roomNumber;

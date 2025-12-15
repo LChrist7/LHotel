@@ -22,7 +22,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Дата заезда</label>
-                    <input type="datetime-local" name="DateStart" id="DateStart" onchange="calculateSum()">
+                    <input type="datetime-local" name="DateStart" id="DateStart" onchange="onDateStartChange(); calculateSum()">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Дата выезда</label>
@@ -247,7 +247,13 @@
             <div class="form-row form-row-4">
                 <div class="form-group">
                     <label class="form-label">Цена за ночь (руб.)</label>
-                    <input type="number" name="Price" id="Price" value="0" min="0" onchange="calculateSum()">
+                    <div class="flex gap-2">
+                        <input type="number" name="Price" id="Price" value="0" min="0" onchange="calculateSum()" style="flex: 1;">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="fetchSeasonPrice()" title="Подтянуть цену из сезонов">
+                            Из сезона
+                        </button>
+                    </div>
+                    <div id="seasonInfo" class="text-sm text-muted mt-1" style="display: none;"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Предоплата (руб.)</label>
@@ -300,6 +306,33 @@ function updateGuestForms(count) {
     }
 }
 
+function onDateStartChange() {
+    const startInput = document.getElementById('DateStart');
+    const endInput = document.getElementById('DateEnd');
+
+    if (startInput.value) {
+        // Получаем дату из startInput
+        let startValue = startInput.value;
+
+        // Устанавливаем время 14:00 для заезда если не установлено вручную
+        if (startValue.length === 10) {
+            // Если ввели только дату без времени
+            startValue = startValue + 'T14:00';
+            startInput.value = startValue;
+        } else if (startValue.includes('T')) {
+            // Заменяем время на 14:00
+            const datePart = startValue.split('T')[0];
+            startInput.value = datePart + 'T14:00';
+        }
+
+        // Копируем дату в поле выезда с временем 12:00
+        if (!endInput.value) {
+            const datePart = startInput.value.split('T')[0];
+            endInput.value = datePart + 'T12:00';
+        }
+    }
+}
+
 function calculateSum() {
     const startInput = document.getElementById('DateStart');
     const endInput = document.getElementById('DateEnd');
@@ -318,6 +351,67 @@ function calculateSum() {
             totalDisplay.textContent = '0 руб.';
         }
     }
+}
+
+function getGuestCount() {
+    let count = 0;
+    for (let i = 1; i <= 5; i++) {
+        const guestCard = document.getElementById('guest' + i);
+        if (guestCard && !guestCard.classList.contains('hidden')) {
+            count = i;
+        }
+    }
+    return count || 1;
+}
+
+function fetchSeasonPrice() {
+    const startInput = document.getElementById('DateStart');
+    const endInput = document.getElementById('DateEnd');
+    const priceInput = document.getElementById('Price');
+    const seasonInfo = document.getElementById('seasonInfo');
+
+    if (!startInput.value) {
+        alert('Сначала укажите дату заезда');
+        return;
+    }
+
+    const startDate = startInput.value.split('T')[0];
+    const endDate = endInput.value ? endInput.value.split('T')[0] : startDate;
+    const guestCount = getGuestCount();
+
+    fetch('/api/seasonal-price', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            start_date: startDate,
+            end_date: endDate,
+            guest_count: guestCount
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.base_price) {
+            priceInput.value = data.base_price;
+            calculateSum();
+
+            // Показываем информацию о сезоне
+            let info = 'Сезон: ' + data.season_name + ' (' + data.base_price + ' руб./ночь';
+            if (guestCount > 2) {
+                info += ' + ' + data.extra_person_price + ' руб. за доп. место';
+            }
+            info += ')';
+            seasonInfo.textContent = info;
+            seasonInfo.style.display = 'block';
+        } else {
+            alert('Не удалось получить цену. Проверьте настройки сезонов.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при получении цены');
+    });
 }
 </script>
 {% endblock %}
