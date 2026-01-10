@@ -36,30 +36,24 @@
                     {% for room in rooms %}
                     <tr>
                         <td class="room-cell">{{ room }}</td>
-                        {% for day in days %}
-                            {% set day_str = day.strftime('%Y-%m-%d') %}
-                            {% set cell = room_days[room][day_str] %}
-                            {% set has_top = cell.top is not none %}
-                            {% set has_bottom = cell.bottom is not none %}
-                            {% set top_tour = cell.top.is_tour if has_top else false %}
-                            {% set bottom_tour = cell.bottom.is_tour if has_bottom else false %}
-
-                            <td class="day-cell {% if has_top and has_bottom and cell.top.numbook == cell.bottom.numbook %}booking-full{% endif %}">
-                                {# Верхняя половина (выезд) #}
-                                <div class="day-top {% if has_top %}{% if top_tour %}tour{% else %}direct{% endif %}{% endif %} {% if cell.top_end %}booking-end{% endif %}">
-                                </div>
-                                {# Нижняя половина (заезд) #}
-                                <div class="day-bottom {% if has_bottom %}{% if bottom_tour %}tour{% else %}direct{% endif %}{% endif %} {% if cell.bottom_start %}booking-start{% endif %}">
-                                </div>
-                                {# Диагональная линия если разные брони в один день #}
-                                {% if has_top and has_bottom and cell.top.numbook != cell.bottom.numbook %}
-                                    <div class="diagonal-line"></div>
-                                {% endif %}
-                                {# Текст брони - показываем в первый день #}
-                                {% if cell.show_label %}
-                                    <span class="booking-label">{{ cell.label }}</span>
-                                {% endif %}
-                            </td>
+                        {% for cell in room_rows[room] %}
+                            {% if cell.type == 'booking' %}
+                                <td colspan="{{ cell.colspan }}"
+                                    class="booking-cell {% if cell.is_tour %}tour{% else %}direct{% endif %} {% if cell.is_first %}first{% endif %} {% if cell.is_last %}last{% endif %}"
+                                    title="{{ cell.numbook }}: {{ cell.booking.guest_name }}">
+                                    <div class="booking-content">
+                                        <span class="booking-label">{{ cell.numbook }} {{ cell.surname }}</span>
+                                    </div>
+                                    {% if cell.is_first %}
+                                    <div class="checkin-corner"></div>
+                                    {% endif %}
+                                    {% if cell.is_last %}
+                                    <div class="checkout-corner"></div>
+                                    {% endif %}
+                                </td>
+                            {% else %}
+                                <td class="empty-cell"></td>
+                            {% endif %}
                         {% endfor %}
                     </tr>
                     {% endfor %}

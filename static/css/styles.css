@@ -699,70 +699,76 @@ input::placeholder {
     padding: 0 4px;
 }
 
-.calendar-table .day-cell {
-    padding: 0;
+/* Пустая ячейка */
+.calendar-table .empty-cell {
+    height: 36px;
+    min-width: 32px;
+}
+
+/* Ячейка бронирования */
+.calendar-table .booking-cell {
     position: relative;
-    min-width: 38px;
-    width: 38px;
-    height: 32px;
-    vertical-align: top;
+    height: 36px;
+    padding: 0;
     overflow: hidden;
 }
 
-.calendar-table .day-top,
-.calendar-table .day-bottom {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 50%;
-}
-
-.calendar-table .day-top {
-    top: 0;
-}
-
-.calendar-table .day-bottom {
-    bottom: 0;
-}
-
-/* Цвета бронирований */
-.calendar-table .day-top.direct,
-.calendar-table .day-bottom.direct {
+.calendar-table .booking-cell.direct {
     background: var(--booking-direct);
 }
 
-.calendar-table .day-top.tour,
-.calendar-table .day-bottom.tour {
+.calendar-table .booking-cell.tour {
     background: var(--booking-tour);
 }
 
-/* Диагональное разделение при смене гостей */
-.calendar-table .diagonal-line {
+/* Контент бронирования */
+.calendar-table .booking-content {
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--gray-500) 50%, transparent calc(50% + 1px));
-    pointer-events: none;
-    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
 }
 
 /* Текст брони */
 .calendar-table .booking-label {
-    position: absolute;
-    left: 4px;
-    top: 50%;
-    transform: translateY(-50%);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     color: #1a1a1a;
     white-space: nowrap;
-    z-index: 3;
-    pointer-events: none;
-    text-shadow: 0 0 2px rgba(255,255,255,0.8);
-    letter-spacing: -0.2px;
+    text-align: center;
+    padding: 0 4px;
+}
+
+/* Диагональный срез в день заезда (верхний левый угол) */
+.calendar-table .checkin-corner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 18px 16px 0 0;
+    border-color: white transparent transparent transparent;
+    z-index: 2;
+}
+
+/* Диагональный срез в день выезда (нижний правый угол) */
+.calendar-table .checkout-corner {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 0 18px 16px;
+    border-color: transparent transparent white transparent;
+    z-index: 2;
 }
 
 .legend {

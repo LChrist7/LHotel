@@ -444,61 +444,68 @@ def calendar():
         days.append(current)
         current += timedelta(days=1)
 
-    # Подготавливаем данные: каждый день разделён на 2 части (выезд/заезд)
-    room_days = {}
+    # Подготавливаем данные для отображения с объединёнными ячейками
+    room_rows = {}
     for room in calendar_data['rooms']:
-        room_days[room] = {}
-        for day in days:
+        room_rows[room] = []
+        day_idx = 0
+
+        while day_idx < len(days):
+            day = days[day_idx]
             day_str = day.strftime('%Y-%m-%d')
-            room_days[room][day_str] = {
-                'top': None,
-                'bottom': None,
-                'top_start': False,
-                'top_end': False,
-                'bottom_start': False,
-                'bottom_end': False,
-                'show_label': False,
-                'label': ''
-            }
 
-        # Заполняем данные о бронях
-        for booking in calendar_data['bookings']:
-            if booking['room'] != room:
-                continue
+            # Ищем бронь которая начинается или продолжается в этот день
+            booking_found = None
+            for booking in calendar_data['bookings']:
+                if booking['room'] == room:
+                    bstart = booking['datestart'][:10] if booking['datestart'] else ''
+                    bend = booking['dateend'][:10] if booking['dateend'] else ''
+                    # Бронь активна от заезда до выезда включительно
+                    if bstart <= day_str <= bend:
+                        booking_found = booking
+                        break
 
-            bstart = booking['datestart'][:10] if booking['datestart'] else ''
-            bend = booking['dateend'][:10] if booking['dateend'] else ''
+            if booking_found:
+                bstart = booking_found['datestart'][:10]
+                bend = booking_found['dateend'][:10]
+                start_date_obj = datetime.strptime(bstart, '%Y-%m-%d').date()
+                end_date_obj = datetime.strptime(bend, '%Y-%m-%d').date()
 
-            guest_name = booking.get('guest_name', '')
-            surname = guest_name.split(' ')[0] if guest_name else ''
-            numbook = booking.get('numbook', '')
-            is_tour = booking.get('tour', 0) == 1
-            booking_info = {
-                'booking': booking,
-                'surname': surname,
-                'numbook': numbook,
-                'is_tour': is_tour
-            }
-            label = f"{numbook} {surname}"
+                # Определяем начало отображения (не раньше первого дня месяца)
+                display_start = max(start_date_obj, first_day)
+                # Определяем конец отображения (не позже последнего дня месяца)
+                display_end = min(end_date_obj, last_day)
 
-            for day in days:
-                day_str = day.strftime('%Y-%m-%d')
-                cell = room_days[room][day_str]
+                # colspan - количество дней отображения
+                colspan = (display_end - display_start).days + 1
 
-                if day_str == bstart:
-                    # День заезда - только нижняя часть
-                    cell['bottom'] = booking_info
-                    cell['bottom_start'] = True
-                    cell['show_label'] = True
-                    cell['label'] = label
-                elif day_str == bend:
-                    # День выезда - только верхняя часть
-                    cell['top'] = booking_info
-                    cell['top_end'] = True
-                elif bstart < day_str < bend:
-                    # Промежуточные дни - обе части
-                    cell['top'] = booking_info
-                    cell['bottom'] = booking_info
+                # Получаем фамилию
+                guest_name = booking_found.get('guest_name', '')
+                surname = guest_name.split(' ')[0] if guest_name else ''
+                numbook = booking_found.get('numbook', '')
+                is_tour = booking_found.get('tour', 0) == 1
+
+                # Определяем позицию ячейки в брони
+                is_first = (day == start_date_obj)  # Первая ячейка (заезд)
+                is_last = (display_end == end_date_obj)  # Последняя ячейка (выезд)
+
+                room_rows[room].append({
+                    'type': 'booking',
+                    'colspan': colspan,
+                    'numbook': numbook,
+                    'surname': surname,
+                    'is_tour': is_tour,
+                    'is_first': is_first,
+                    'is_last': is_last,
+                    'booking': booking_found
+                })
+                day_idx += colspan
+            else:
+                room_rows[room].append({
+                    'type': 'empty',
+                    'colspan': 1
+                })
+                day_idx += 1
 
     # Названия месяцев
     month_names = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
@@ -506,7 +513,7 @@ def calendar():
 
     return render_template('calendar.html',
                            rooms=calendar_data['rooms'],
-                           room_days=room_days,
+                           room_rows=room_rows,
                            days=days,
                            year=year,
                            month=month,
