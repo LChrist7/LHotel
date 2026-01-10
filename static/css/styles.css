@@ -820,6 +820,96 @@ input::placeholder {
 }
 
 /* =====================================================
+   Bookings Table
+   ===================================================== */
+.booking-number {
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-bg);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.booking-guest {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.guest-name {
+    font-weight: 500;
+    color: var(--gray-800);
+}
+
+.badge-tour {
+    background: var(--booking-tour);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.badge-transfer {
+    background: var(--info);
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.room-badge {
+    display: inline-block;
+    background: var(--gray-100);
+    color: var(--gray-700);
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.date-display {
+    color: var(--gray-600);
+    font-size: 14px;
+}
+
+.sum-display {
+    font-weight: 600;
+    color: var(--gray-800);
+    font-size: 14px;
+}
+
+/* Row status colors */
+.booking-row-current {
+    background: linear-gradient(90deg, var(--success-bg) 0%, transparent 100%) !important;
+    border-left: 3px solid var(--success);
+}
+
+.booking-row-current td:first-child {
+    padding-left: 13px;
+}
+
+.booking-row-past {
+    opacity: 0.6;
+}
+
+.booking-row-past .guest-name {
+    color: var(--gray-500);
+}
+
+.booking-row-future {
+    /* default styling */
+}
+
+.booking-row-future:hover {
+    background: var(--primary-bg) !important;
+}
+
+/* =====================================================
    Utility Classes
    ===================================================== */
 .mt-1 { margin-top: 4px; }

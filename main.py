@@ -249,7 +249,7 @@ def change():
         dbase = DBSQL.DBSQL(db)
         bookings = dbase.get_current_year_bookings()
         return render_template('change.html', guest1=[], guest2=[], guest3=[], guest4=[], guest5=[],
-                               info=[], sumdiff=0, bookings=bookings)
+                               info=[], sumdiff=0, bookings=bookings, now=datetime.now())
 
 
 @app.route("/", methods=["POST", "GET"])

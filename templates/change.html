@@ -197,36 +197,56 @@
         <span class="badge badge-primary">{{ bookings|length }} записей</span>
         {% endif %}
     </div>
-    <div class="card-body">
+    <div class="card-body" style="padding: 0;">
         {% if bookings %}
         <div class="table-wrapper">
-            <table>
+            <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>№ брони</th>
+                        <th style="width: 120px;">№ брони</th>
                         <th>Гость</th>
-                        <th>Комната</th>
-                        <th>Заезд</th>
-                        <th>Выезд</th>
-                        <th>Сумма</th>
-                        <th>Действие</th>
+                        <th style="width: 80px; text-align: center;">Комната</th>
+                        <th style="width: 120px;">Заезд</th>
+                        <th style="width: 120px;">Выезд</th>
+                        <th style="width: 120px; text-align: right;">Сумма</th>
+                        <th style="width: 100px; text-align: center;">Действие</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for booking in bookings %}
-                    <tr>
-                        <td><strong>{{ booking.numbook }}</strong></td>
+                    {% set today = now.strftime('%Y-%m-%d') if now else '' %}
+                    {% set start_date = booking.datestart[:10] if booking.datestart else '' %}
+                    {% set end_date = booking.dateend[:10] if booking.dateend else '' %}
+                    {% set is_current = start_date <= today and end_date >= today %}
+                    {% set is_past = end_date < today %}
+                    <tr class="{% if is_current %}booking-row-current{% elif is_past %}booking-row-past{% else %}booking-row-future{% endif %}">
                         <td>
-                            {{ booking.guest_name.split(' ')[0] if booking.guest_name else '—' }}
-                            {% if booking.tour == 1 %}
-                            <span class="badge badge-primary" style="font-size: 10px;">ТО</span>
-                            {% endif %}
+                            <span class="booking-number">{{ booking.numbook }}</span>
                         </td>
-                        <td>{{ booking.room }}</td>
-                        <td>{{ booking.datestart[:10] if booking.datestart else '' }}</td>
-                        <td>{{ booking.dateend[:10] if booking.dateend else '' }}</td>
-                        <td>{{ booking.sumbook|int }} руб.</td>
                         <td>
+                            <div class="booking-guest">
+                                <span class="guest-name">{{ booking.guest_name if booking.guest_name else '—' }}</span>
+                                {% if booking.tour == 1 %}
+                                <span class="badge badge-tour">ТО</span>
+                                {% endif %}
+                                {% if booking.transfer == 1 %}
+                                <span class="badge badge-transfer">Трансфер</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="room-badge">{{ booking.room }}</span>
+                        </td>
+                        <td>
+                            <span class="date-display">{{ start_date[8:10] }}.{{ start_date[5:7] }}.{{ start_date[:4] }}</span>
+                        </td>
+                        <td>
+                            <span class="date-display">{{ end_date[8:10] }}.{{ end_date[5:7] }}.{{ end_date[:4] }}</span>
+                        </td>
+                        <td style="text-align: right;">
+                            <span class="sum-display">{{ '{:,.0f}'.format(booking.sumbook).replace(',', ' ') }} ₽</span>
+                        </td>
+                        <td style="text-align: center;">
                             <form action="/change" method="post" style="display: inline;">
                                 <input type="hidden" name="numchange" value="{{ booking.numbook }}">
                                 <button type="submit" class="btn btn-outline btn-sm">Открыть</button>
