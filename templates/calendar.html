@@ -39,21 +39,25 @@
                         {% for day in days %}
                             {% set day_str = day.strftime('%Y-%m-%d') %}
                             {% set cell = room_days[room][day_str] %}
-                            <td class="day-cell">
-                                <div class="day-half day-top {% if cell.top %}{% if cell.top.booking.tour == 1 %}booked-tour{% else %}booked{% endif %}{% endif %}"
-                                     {% if cell.top %}title="{{ cell.top.numbook }}: {{ cell.top.booking.guest_name }}"{% endif %}>
-                                    {% if cell.top and (not cell.bottom or cell.top.numbook != cell.bottom.numbook) %}
-                                        <span class="half-label">{{ cell.top.numbook }} {{ cell.top.surname }}</span>
-                                    {% endif %}
+                            {% set has_top = cell.top is not none %}
+                            {% set has_bottom = cell.bottom is not none %}
+                            {% set top_tour = cell.top.is_tour if has_top else false %}
+                            {% set bottom_tour = cell.bottom.is_tour if has_bottom else false %}
+
+                            <td class="day-cell {% if has_top and has_bottom and cell.top.numbook == cell.bottom.numbook %}booking-full{% endif %}">
+                                {# Верхняя половина (выезд) #}
+                                <div class="day-top {% if has_top %}{% if top_tour %}tour{% else %}direct{% endif %}{% endif %} {% if cell.top_end %}booking-end{% endif %}">
                                 </div>
-                                <div class="day-half day-bottom {% if cell.bottom %}{% if cell.bottom.booking.tour == 1 %}booked-tour{% else %}booked{% endif %}{% endif %}"
-                                     {% if cell.bottom %}title="{{ cell.bottom.numbook }}: {{ cell.bottom.booking.guest_name }}"{% endif %}>
-                                    {% if cell.bottom and (not cell.top or cell.top.numbook != cell.bottom.numbook) %}
-                                        <span class="half-label">{{ cell.bottom.numbook }} {{ cell.bottom.surname }}</span>
-                                    {% endif %}
+                                {# Нижняя половина (заезд) #}
+                                <div class="day-bottom {% if has_bottom %}{% if bottom_tour %}tour{% else %}direct{% endif %}{% endif %} {% if cell.bottom_start %}booking-start{% endif %}">
                                 </div>
-                                {% if cell.top and cell.bottom and cell.top.numbook == cell.bottom.numbook %}
-                                    <span class="full-label">{{ cell.top.numbook }} {{ cell.top.surname }}</span>
+                                {# Диагональная линия если разные брони в один день #}
+                                {% if has_top and has_bottom and cell.top.numbook != cell.bottom.numbook %}
+                                    <div class="diagonal-line"></div>
+                                {% endif %}
+                                {# Текст брони - показываем в первый день #}
+                                {% if cell.show_label %}
+                                    <span class="booking-label">{{ cell.label }}</span>
                                 {% endif %}
                             </td>
                         {% endfor %}
@@ -65,11 +69,11 @@
 
         <div class="legend">
             <div class="legend-item">
-                <div class="legend-box" style="background: #fecaca;"></div>
+                <div class="legend-box" style="background: var(--booking-direct);"></div>
                 <span>Прямое бронирование</span>
             </div>
             <div class="legend-item">
-                <div class="legend-box" style="background: #bfdbfe;"></div>
+                <div class="legend-box" style="background: var(--booking-tour);"></div>
                 <span>Туроператор</span>
             </div>
         </div>

@@ -675,7 +675,7 @@ input::placeholder {
 
 .calendar-table th,
 .calendar-table td {
-    border: 1px solid var(--gray-200);
+    border: 1px solid var(--gray-300);
     text-align: center;
     font-size: 12px;
 }
@@ -684,66 +684,92 @@ input::placeholder {
     background: var(--gray-800);
     color: white;
     font-weight: 500;
-    padding: 8px 4px;
+    padding: 6px 2px;
 }
 
 .calendar-table th.room-header {
     background: var(--gray-900);
-    min-width: 60px;
+    min-width: 50px;
 }
 
 .calendar-table td.room-cell {
     background: var(--gray-100);
     font-weight: 600;
     text-align: center;
-    padding: 0 8px;
+    padding: 0 4px;
 }
 
 .calendar-table .day-cell {
     padding: 0;
     position: relative;
-    min-width: 45px;
-    height: 36px;
-    vertical-align: middle;
+    min-width: 38px;
+    width: 38px;
+    height: 32px;
+    vertical-align: top;
+    overflow: visible;
 }
 
-.calendar-table .day-half {
-    height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.calendar-table .day-top,
+.calendar-table .day-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50%;
 }
 
 .calendar-table .day-top {
-    border-bottom: 1px solid var(--gray-200);
+    top: 0;
 }
 
-.calendar-table .booked {
+.calendar-table .day-bottom {
+    bottom: 0;
+}
+
+/* Цвета бронирований */
+.calendar-table .day-top.direct,
+.calendar-table .day-bottom.direct {
     background: var(--booking-direct);
 }
 
-.calendar-table .booked-tour {
+.calendar-table .day-top.tour,
+.calendar-table .day-bottom.tour {
     background: var(--booking-tour);
 }
 
-.calendar-table .half-label,
-.calendar-table .full-label {
+/* Диагональное разделение при смене гостей */
+.calendar-table .diagonal-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom right, transparent calc(50% - 1px), var(--gray-400) 50%, transparent calc(50% + 1px));
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Текст брони */
+.calendar-table .booking-label {
+    position: absolute;
+    left: 2px;
+    top: 50%;
+    transform: translateY(-50%);
     font-size: 9px;
     font-weight: 600;
     color: #333;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0 2px;
+    z-index: 3;
+    pointer-events: none;
 }
 
-.calendar-table .full-label {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 10px;
-    z-index: 1;
+/* Убираем границы между соседними занятыми ячейками */
+.calendar-table .booking-full {
+    border-left-color: transparent;
+    border-right-color: transparent;
+}
+
+.calendar-table .booking-full + .booking-full {
+    border-left-color: transparent;
 }
 
 .legend {

@@ -450,7 +450,16 @@ def calendar():
         room_days[room] = {}
         for day in days:
             day_str = day.strftime('%Y-%m-%d')
-            room_days[room][day_str] = {'top': None, 'bottom': None}
+            room_days[room][day_str] = {
+                'top': None,
+                'bottom': None,
+                'top_start': False,
+                'top_end': False,
+                'bottom_start': False,
+                'bottom_end': False,
+                'show_label': False,
+                'label': ''
+            }
 
         # Заполняем данные о бронях
         for booking in calendar_data['bookings']:
@@ -462,25 +471,34 @@ def calendar():
 
             guest_name = booking.get('guest_name', '')
             surname = guest_name.split(' ')[0] if guest_name else ''
+            numbook = booking.get('numbook', '')
+            is_tour = booking.get('tour', 0) == 1
             booking_info = {
                 'booking': booking,
                 'surname': surname,
-                'numbook': booking.get('numbook', '')
+                'numbook': numbook,
+                'is_tour': is_tour
             }
+            label = f"{numbook} {surname}"
 
             for day in days:
                 day_str = day.strftime('%Y-%m-%d')
+                cell = room_days[room][day_str]
 
                 if day_str == bstart:
                     # День заезда - только нижняя часть
-                    room_days[room][day_str]['bottom'] = booking_info
+                    cell['bottom'] = booking_info
+                    cell['bottom_start'] = True
+                    cell['show_label'] = True
+                    cell['label'] = label
                 elif day_str == bend:
                     # День выезда - только верхняя часть
-                    room_days[room][day_str]['top'] = booking_info
+                    cell['top'] = booking_info
+                    cell['top_end'] = True
                 elif bstart < day_str < bend:
                     # Промежуточные дни - обе части
-                    room_days[room][day_str]['top'] = booking_info
-                    room_days[room][day_str]['bottom'] = booking_info
+                    cell['top'] = booking_info
+                    cell['bottom'] = booking_info
 
     # Названия месяцев
     month_names = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
