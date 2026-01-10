@@ -7,107 +7,69 @@
 {% block content %}
 <div class="info-box mb-5">
     <h4>Как работают сезоны</h4>
-    <p>Для каждого сезона задаётся <strong>базовая цена за ночь</strong> (для 1-2 гостей) и <strong>доплата за дополнительное место</strong> (за каждого гостя свыше 2-х).</p>
-    <p class="mt-2"><em>Пример: базовая цена 5000 руб. + доплата 1500 руб. × 2 доп. гостя = 8000 руб. за ночь для 4 гостей.</em></p>
+    <p>Для каждого сезона задаётся <strong>базовая цена за ночь</strong> (для 1-2 гостей), <strong>доплата за дополнительное место</strong> и <strong>цены на питание</strong> (за человека в сутки).</p>
 </div>
 
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px;">
-    <!-- Добавить сезон -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Добавить новый сезон</h3>
-        </div>
-        <div class="card-body">
-            <form method="post" action="/seasons">
-                <input type="hidden" name="action" value="add">
+<!-- Добавить сезон -->
+<div class="card mb-5">
+    <div class="card-header">
+        <h3 class="card-title">Добавить новый сезон</h3>
+    </div>
+    <div class="card-body">
+        <form method="post" action="/seasons">
+            <input type="hidden" name="action" value="add">
+            <div class="form-row form-row-3">
                 <div class="form-group">
                     <label class="form-label">Название сезона</label>
                     <input type="text" name="name" placeholder="Например: Высокий сезон" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Дата начала</label>
-                        <input type="date" name="start_date" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Дата окончания</label>
-                        <input type="date" name="end_date" required>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Дата начала</label>
+                    <input type="date" name="start_date" required>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Цена за ночь (1-2 гостя)</label>
-                        <input type="number" name="base_price" min="0" step="100" value="5000" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Доплата за доп. место</label>
-                        <input type="number" name="extra_person_price" min="0" step="100" value="1000" required>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Дата окончания</label>
+                    <input type="date" name="end_date" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">
-                    Добавить сезон
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Примеры сезонов -->
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Примеры цен</h3>
-        </div>
-        <div class="card-body">
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Тип сезона</th>
-                            <th>Базовая цена</th>
-                            <th>Доп. место</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <strong>Высокий сезон</strong>
-                                <div class="text-sm text-muted">Лето, праздники</div>
-                            </td>
-                            <td><span class="badge badge-danger">7000-10000</span></td>
-                            <td><span class="badge badge-warning">1500-2000</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <strong>Новогодние праздники</strong>
-                                <div class="text-sm text-muted">31.12 - 08.01</div>
-                            </td>
-                            <td><span class="badge badge-danger">10000-15000</span></td>
-                            <td><span class="badge badge-warning">2000-3000</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <strong>Низкий сезон</strong>
-                                <div class="text-sm text-muted">Ноябрь, март</div>
-                            </td>
-                            <td><span class="badge badge-primary">3000-4000</span></td>
-                            <td><span class="badge badge-success">500-800</span></td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <strong>Обычный период</strong>
-                                <div class="text-sm text-muted">Остальное время</div>
-                            </td>
-                            <td><span class="badge badge-success">5000-6000</span></td>
-                            <td><span class="badge badge-success">1000</span></td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
-        </div>
+
+            <h4 class="mt-4 mb-3" style="font-size: 14px; color: #666;">Цены за проживание</h4>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Цена за ночь (1-2 гостя)</label>
+                    <input type="number" name="base_price" min="0" step="100" value="5000" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Доплата за доп. место</label>
+                    <input type="number" name="extra_person_price" min="0" step="100" value="1000" required>
+                </div>
+            </div>
+
+            <h4 class="mt-4 mb-3" style="font-size: 14px; color: #666;">Цены на питание (за человека в сутки)</h4>
+            <div class="form-row form-row-3">
+                <div class="form-group">
+                    <label class="form-label">Полный пансион</label>
+                    <input type="number" name="fullpans_price" min="0" step="100" value="2500" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Полупансион</label>
+                    <input type="number" name="halfpans_price" min="0" step="100" value="1500" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Завтрак</label>
+                    <input type="number" name="breakfast_price" min="0" step="100" value="500" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block mt-4">
+                Добавить сезон
+            </button>
+        </form>
     </div>
 </div>
 
 <!-- Текущие сезоны -->
-<div class="card mt-5">
+<div class="card">
     <div class="card-header">
         <h3 class="card-title">Текущие сезоны</h3>
         {% if seasons %}
@@ -122,8 +84,8 @@
                     <tr>
                         <th>Название</th>
                         <th>Период</th>
-                        <th>Цена (1-2 гостя)</th>
-                        <th>Доп. место</th>
+                        <th>Проживание</th>
+                        <th>Питание</th>
                         <th>Действия</th>
                     </tr>
                 </thead>
@@ -132,8 +94,17 @@
                     <tr>
                         <td><strong>{{ season.name }}</strong></td>
                         <td>{{ season.start_date }} — {{ season.end_date }}</td>
-                        <td><span class="badge badge-primary">{{ season.base_price|int }} руб.</span></td>
-                        <td><span class="badge badge-warning">+{{ season.extra_person_price|int }} руб.</span></td>
+                        <td>
+                            <span class="badge badge-primary">{{ season.base_price|int }} руб.</span>
+                            <span class="badge badge-warning">+{{ season.extra_person_price|int }}</span>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                <div>ПП: {{ season.fullpans_price|int if season.fullpans_price else 2500 }} руб.</div>
+                                <div>ПолуП: {{ season.halfpans_price|int if season.halfpans_price else 1500 }} руб.</div>
+                                <div>Завтр: {{ season.breakfast_price|int if season.breakfast_price else 500 }} руб.</div>
+                            </div>
+                        </td>
                         <td>
                             <div class="flex gap-2">
                                 <button class="btn btn-outline btn-sm" onclick="toggleEdit({{ season.id }})">Изменить</button>
@@ -147,11 +118,12 @@
                     </tr>
                     <tr class="edit-row" id="edit-row-{{ season.id }}" style="display: none;">
                         <td colspan="5">
-                            <div class="edit-form-inline">
+                            <div class="edit-form-inline" style="background: #f9f9f9; padding: 16px; border-radius: 8px;">
                                 <form method="post" action="/seasons">
                                     <input type="hidden" name="action" value="update">
                                     <input type="hidden" name="season_id" value="{{ season.id }}">
-                                    <div class="form-row" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;">
+
+                                    <div class="form-row form-row-3">
                                         <div class="form-group">
                                             <label class="form-label">Название</label>
                                             <input type="text" name="name" value="{{ season.name }}" required>
@@ -164,6 +136,9 @@
                                             <label class="form-label">Дата окончания</label>
                                             <input type="date" name="end_date" value="{{ season.end_date }}" required>
                                         </div>
+                                    </div>
+
+                                    <div class="form-row">
                                         <div class="form-group">
                                             <label class="form-label">Базовая цена</label>
                                             <input type="number" name="base_price" min="0" step="100" value="{{ season.base_price|int }}" required>
@@ -173,6 +148,22 @@
                                             <input type="number" name="extra_person_price" min="0" step="100" value="{{ season.extra_person_price|int }}" required>
                                         </div>
                                     </div>
+
+                                    <div class="form-row form-row-3">
+                                        <div class="form-group">
+                                            <label class="form-label">Полный пансион</label>
+                                            <input type="number" name="fullpans_price" min="0" step="100" value="{{ season.fullpans_price|int if season.fullpans_price else 2500 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Полупансион</label>
+                                            <input type="number" name="halfpans_price" min="0" step="100" value="{{ season.halfpans_price|int if season.halfpans_price else 1500 }}" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Завтрак</label>
+                                            <input type="number" name="breakfast_price" min="0" step="100" value="{{ season.breakfast_price|int if season.breakfast_price else 500 }}" required>
+                                        </div>
+                                    </div>
+
                                     <div class="flex gap-2 mt-3">
                                         <button type="submit" class="btn btn-success">Сохранить</button>
                                         <button type="button" class="btn btn-outline" onclick="toggleEdit({{ season.id }})">Отмена</button>
@@ -189,7 +180,7 @@
         <div class="text-center" style="padding: 60px;">
             <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
             <h3 class="mb-3">Сезоны не добавлены</h3>
-            <p class="text-muted">Создайте первый сезон, используя форму слева</p>
+            <p class="text-muted">Создайте первый сезон, используя форму выше</p>
         </div>
         {% endif %}
     </div>

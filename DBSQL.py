@@ -20,13 +20,23 @@ class DBSQL:
                         start_date DATE NOT NULL,
                         end_date DATE NOT NULL,
                         base_price REAL NOT NULL DEFAULT 5000,
-                        extra_person_price REAL NOT NULL DEFAULT 1000
+                        extra_person_price REAL NOT NULL DEFAULT 1000,
+                        fullpans_price REAL NOT NULL DEFAULT 2500,
+                        halfpans_price REAL NOT NULL DEFAULT 1500,
+                        breakfast_price REAL NOT NULL DEFAULT 500
                     )
                 """)
-            elif 'price_modifier' in columns and 'base_price' not in columns:
-                # Старая структура - мигрируем
-                self.__cur.execute("ALTER TABLE seasons ADD COLUMN base_price REAL NOT NULL DEFAULT 5000")
-                self.__cur.execute("ALTER TABLE seasons ADD COLUMN extra_person_price REAL NOT NULL DEFAULT 1000")
+            else:
+                # Миграция существующей таблицы
+                if 'price_modifier' in columns and 'base_price' not in columns:
+                    self.__cur.execute("ALTER TABLE seasons ADD COLUMN base_price REAL NOT NULL DEFAULT 5000")
+                    self.__cur.execute("ALTER TABLE seasons ADD COLUMN extra_person_price REAL NOT NULL DEFAULT 1000")
+                if 'fullpans_price' not in columns:
+                    self.__cur.execute("ALTER TABLE seasons ADD COLUMN fullpans_price REAL NOT NULL DEFAULT 2500")
+                if 'halfpans_price' not in columns:
+                    self.__cur.execute("ALTER TABLE seasons ADD COLUMN halfpans_price REAL NOT NULL DEFAULT 1500")
+                if 'breakfast_price' not in columns:
+                    self.__cur.execute("ALTER TABLE seasons ADD COLUMN breakfast_price REAL NOT NULL DEFAULT 500")
 
             self.__db.commit()
         except Exception as e:
@@ -36,7 +46,8 @@ class DBSQL:
         """Получить все сезоны"""
         try:
             self.__cur.execute("""
-                SELECT id, name, start_date, end_date, base_price, extra_person_price
+                SELECT id, name, start_date, end_date, base_price, extra_person_price,
+                       fullpans_price, halfpans_price, breakfast_price
                 FROM seasons
                 ORDER BY start_date
             """)
@@ -45,26 +56,32 @@ class DBSQL:
             print(e)
             return []
 
-    def add_season(self, name, start_date, end_date, base_price, extra_person_price):
+    def add_season(self, name, start_date, end_date, base_price, extra_person_price,
+                   fullpans_price, halfpans_price, breakfast_price):
         """Добавить новый сезон"""
         try:
             self.__cur.execute("""
-                INSERT INTO seasons (name, start_date, end_date, base_price, extra_person_price)
-                VALUES (?, ?, ?, ?, ?)
-            """, (name, start_date, end_date, base_price, extra_person_price))
+                INSERT INTO seasons (name, start_date, end_date, base_price, extra_person_price,
+                                     fullpans_price, halfpans_price, breakfast_price)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (name, start_date, end_date, base_price, extra_person_price,
+                  fullpans_price, halfpans_price, breakfast_price))
             return True
         except Exception as e:
             print(e)
             return False
 
-    def update_season(self, season_id, name, start_date, end_date, base_price, extra_person_price):
+    def update_season(self, season_id, name, start_date, end_date, base_price, extra_person_price,
+                      fullpans_price, halfpans_price, breakfast_price):
         """Обновить сезон"""
         try:
             self.__cur.execute("""
                 UPDATE seasons
-                SET name = ?, start_date = ?, end_date = ?, base_price = ?, extra_person_price = ?
+                SET name = ?, start_date = ?, end_date = ?, base_price = ?, extra_person_price = ?,
+                    fullpans_price = ?, halfpans_price = ?, breakfast_price = ?
                 WHERE id = ?
-            """, (name, start_date, end_date, base_price, extra_person_price, season_id))
+            """, (name, start_date, end_date, base_price, extra_person_price,
+                  fullpans_price, halfpans_price, breakfast_price, season_id))
             return True
         except Exception as e:
             print(e)
@@ -83,7 +100,8 @@ class DBSQL:
         """Получить сезон для указанной даты"""
         try:
             self.__cur.execute("""
-                SELECT name, base_price, extra_person_price
+                SELECT name, base_price, extra_person_price,
+                       fullpans_price, halfpans_price, breakfast_price
                 FROM seasons
                 WHERE ? BETWEEN start_date AND end_date
                 LIMIT 1
@@ -91,10 +109,24 @@ class DBSQL:
             result = self.__cur.fetchone()
             if result:
                 return dict(result)
-            return {'name': 'Базовый', 'base_price': 5000, 'extra_person_price': 1000}
+            return {
+                'name': 'Базовый',
+                'base_price': 5000,
+                'extra_person_price': 1000,
+                'fullpans_price': 2500,
+                'halfpans_price': 1500,
+                'breakfast_price': 500
+            }
         except Exception as e:
             print(e)
-            return {'name': 'Базовый', 'base_price': 5000, 'extra_person_price': 1000}
+            return {
+                'name': 'Базовый',
+                'base_price': 5000,
+                'extra_person_price': 1000,
+                'fullpans_price': 2500,
+                'halfpans_price': 1500,
+                'breakfast_price': 500
+            }
 
     def calculate_seasonal_price(self, start_date, end_date, guest_count=2):
         """Рассчитать цену с учётом сезонов и количества гостей"""

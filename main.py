@@ -309,7 +309,11 @@ def seasons():
             end_date = request.form.get('end_date')
             base_price = float(request.form.get('base_price', 5000))
             extra_person_price = float(request.form.get('extra_person_price', 1000))
-            dbase.add_season(name, start_date, end_date, base_price, extra_person_price)
+            fullpans_price = float(request.form.get('fullpans_price', 2500))
+            halfpans_price = float(request.form.get('halfpans_price', 1500))
+            breakfast_price = float(request.form.get('breakfast_price', 500))
+            dbase.add_season(name, start_date, end_date, base_price, extra_person_price,
+                             fullpans_price, halfpans_price, breakfast_price)
             db.commit()
 
         elif action == 'update':
@@ -319,7 +323,11 @@ def seasons():
             end_date = request.form.get('end_date')
             base_price = float(request.form.get('base_price', 5000))
             extra_person_price = float(request.form.get('extra_person_price', 1000))
-            dbase.update_season(season_id, name, start_date, end_date, base_price, extra_person_price)
+            fullpans_price = float(request.form.get('fullpans_price', 2500))
+            halfpans_price = float(request.form.get('halfpans_price', 1500))
+            breakfast_price = float(request.form.get('breakfast_price', 500))
+            dbase.update_season(season_id, name, start_date, end_date, base_price, extra_person_price,
+                                fullpans_price, halfpans_price, breakfast_price)
             db.commit()
 
         elif action == 'delete':
@@ -352,7 +360,10 @@ def api_seasonal_price():
             'total': total,
             'season_name': season['name'],
             'base_price': season['base_price'],
-            'extra_person_price': season['extra_person_price']
+            'extra_person_price': season['extra_person_price'],
+            'fullpans_price': season.get('fullpans_price', 2500),
+            'halfpans_price': season.get('halfpans_price', 1500),
+            'breakfast_price': season.get('breakfast_price', 500)
         })
     return json.dumps({'total': 0})
 
