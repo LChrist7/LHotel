@@ -25,7 +25,7 @@
                         <th class="room-header">Номер</th>
                         {% for day in days %}
                             {% set weekday = day.weekday() %}
-                            <th class="{% if weekday >= 5 %}weekend{% endif %} {% if day == today %}today{% endif %}">
+                            <th class="{% if day == today %}today{% endif %}">
                                 {{ day.day }}<br>
                                 <small>{% if weekday == 0 %}Пн{% elif weekday == 1 %}Вт{% elif weekday == 2 %}Ср{% elif weekday == 3 %}Чт{% elif weekday == 4 %}Пт{% elif weekday == 5 %}Сб{% else %}Вс{% endif %}</small>
                             </th>
@@ -42,11 +42,10 @@
                                     class="{% if cell.booking.tour == 1 %}booked-tour{% else %}booked{% endif %} booking-cell"
                                     title="{{ cell.booking.numbook }}: {{ cell.booking.guest_name }}"
                                     onclick="window.location='/change'">
-                                    <span class="booking-label">{{ cell.surname }}</span>
+                                    <span class="booking-label">{{ cell.booking.numbook }}<br>{{ cell.surname }}</span>
                                 </td>
                             {% else %}
-                                {% set weekday = cell.day.weekday() %}
-                                <td class="{% if weekday >= 5 %}weekend{% endif %}"></td>
+                                <td></td>
                             {% endif %}
                         {% endfor %}
                     </tr>
@@ -63,10 +62,6 @@
             <div class="legend-item">
                 <div class="legend-box" style="background: #bfdbfe;"></div>
                 <span>Туроператор</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box" style="background: #fef9c3;"></div>
-                <span>Выходные</span>
             </div>
         </div>
     </div>
