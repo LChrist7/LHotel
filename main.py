@@ -343,29 +343,55 @@ def seasons():
 
 @app.route("/api/seasonal-price", methods=["POST"])
 def api_seasonal_price():
-    """API для расчёта цены с учётом сезонов и количества гостей"""
+    """API для расчёта цены с учётом сезонов, количества гостей и питания"""
     import json
     db = get_db()
     dbase = DBSQL.DBSQL(db)
 
     data = request.get_json() if request.is_json else request.form
     start_date = data.get('start_date', '')
-    end_date = data.get('end_date', '')
     guest_count = int(data.get('guest_count', 2))
+    fullpans_count = int(data.get('fullpans_count', 0))
+    halfpans_count = int(data.get('halfpans_count', 0))
+    breakfast_count = int(data.get('breakfast_count', 0))
 
-    if start_date and end_date:
-        total = dbase.calculate_seasonal_price(start_date, end_date, guest_count)
+    if start_date:
         season = dbase.get_season_for_date(start_date)
-        return json.dumps({
-            'total': total,
-            'season_name': season['name'],
-            'base_price': season['base_price'],
-            'extra_person_price': season['extra_person_price'],
-            'fullpans_price': season.get('fullpans_price', 2500),
-            'halfpans_price': season.get('halfpans_price', 1500),
-            'breakfast_price': season.get('breakfast_price', 500)
-        })
-    return json.dumps({'total': 0})
+        if season:
+            base_price = season['base_price']
+            extra_person_price = season['extra_person_price']
+            fullpans_price = season.get('fullpans_price', 2500)
+            halfpans_price = season.get('halfpans_price', 1500)
+            breakfast_price = season.get('breakfast_price', 500)
+
+            # Расчёт цены за проживание
+            accommodation = base_price
+            if guest_count > 2:
+                accommodation += extra_person_price * (guest_count - 2)
+
+            # Расчёт цены за питание
+            meals = (fullpans_count * fullpans_price +
+                    halfpans_count * halfpans_price +
+                    breakfast_count * breakfast_price)
+
+            # Итого за сутки
+            daily_total = accommodation + meals
+
+            return json.dumps({
+                'daily_total': daily_total,
+                'accommodation': accommodation,
+                'meals': meals,
+                'season_name': season['name'],
+                'base_price': base_price,
+                'extra_person_price': extra_person_price,
+                'fullpans_price': fullpans_price,
+                'halfpans_price': halfpans_price,
+                'breakfast_price': breakfast_price,
+                'fullpans_count': fullpans_count,
+                'halfpans_count': halfpans_count,
+                'breakfast_count': breakfast_count
+            })
+    return json.dumps({'daily_total': 0})
 
 
 @app.route("/stats", methods=["GET", "POST"])

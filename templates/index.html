@@ -364,9 +364,28 @@ function getGuestCount() {
     return count || 1;
 }
 
+function getMealCounts() {
+    const guestCount = getGuestCount();
+    let fullpans = 0, halfpans = 0, breakfast = 0;
+
+    for (let i = 1; i <= guestCount; i++) {
+        const guestCard = document.getElementById('guest' + i);
+        if (guestCard && !guestCard.classList.contains('hidden')) {
+            const fp = document.querySelector('input[name="fullpans' + i + '"]');
+            const hp = document.querySelector('input[name="halfpans' + i + '"]');
+            const br = document.querySelector('input[name="breakfast' + i + '"]');
+
+            if (fp && fp.checked) fullpans++;
+            if (hp && hp.checked) halfpans++;
+            if (br && br.checked) breakfast++;
+        }
+    }
+
+    return { fullpans, halfpans, breakfast };
+}
+
 function fetchSeasonPrice() {
     const startInput = document.getElementById('DateStart');
-    const endInput = document.getElementById('DateEnd');
     const priceInput = document.getElementById('Price');
     const seasonInfo = document.getElementById('seasonInfo');
 
@@ -376,8 +395,8 @@ function fetchSeasonPrice() {
     }
 
     const startDate = startInput.value.split('T')[0];
-    const endDate = endInput.value ? endInput.value.split('T')[0] : startDate;
     const guestCount = getGuestCount();
+    const meals = getMealCounts();
 
     fetch('/api/seasonal-price', {
         method: 'POST',
@@ -386,23 +405,35 @@ function fetchSeasonPrice() {
         },
         body: JSON.stringify({
             start_date: startDate,
-            end_date: endDate,
-            guest_count: guestCount
+            guest_count: guestCount,
+            fullpans_count: meals.fullpans,
+            halfpans_count: meals.halfpans,
+            breakfast_count: meals.breakfast
         })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.base_price) {
-            priceInput.value = data.base_price;
+        if (data.daily_total) {
+            priceInput.value = data.daily_total;
             calculateSum();
 
-            // Показываем информацию о сезоне
-            let info = 'Сезон: ' + data.season_name + ' (' + data.base_price + ' руб./ночь';
+            // Показываем детальную информацию о расчёте
+            let info = '<strong>Сезон:</strong> ' + data.season_name + '<br>';
+            info += '<strong>Проживание:</strong> ' + data.accommodation + ' руб.';
             if (guestCount > 2) {
-                info += ' + ' + data.extra_person_price + ' руб. за доп. место';
+                info += ' (база ' + data.base_price + ' + ' + (guestCount - 2) + ' доп. × ' + data.extra_person_price + ')';
             }
-            info += ')';
-            seasonInfo.textContent = info;
+            if (data.meals > 0) {
+                info += '<br><strong>Питание:</strong> ' + data.meals + ' руб.';
+                let mealDetails = [];
+                if (meals.fullpans > 0) mealDetails.push('ПП: ' + meals.fullpans + ' × ' + data.fullpans_price);
+                if (meals.halfpans > 0) mealDetails.push('ПолуП: ' + meals.halfpans + ' × ' + data.halfpans_price);
+                if (meals.breakfast > 0) mealDetails.push('Завтр: ' + meals.breakfast + ' × ' + data.breakfast_price);
+                if (mealDetails.length > 0) {
+                    info += ' (' + mealDetails.join(', ') + ')';
+                }
+            }
+            seasonInfo.innerHTML = info;
             seasonInfo.style.display = 'block';
         } else {
             alert('Не удалось получить цену. Проверьте настройки сезонов.');
