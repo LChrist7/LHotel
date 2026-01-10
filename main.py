@@ -444,53 +444,43 @@ def calendar():
         days.append(current)
         current += timedelta(days=1)
 
-    # Подготавливаем данные для отображения с объединёнными ячейками
-    room_rows = {}
+    # Подготавливаем данные: каждый день разделён на 2 части (выезд/заезд)
+    room_days = {}
     for room in calendar_data['rooms']:
-        room_rows[room] = []
-        day_idx = 0
-        while day_idx < len(days):
-            day = days[day_idx]
+        room_days[room] = {}
+        for day in days:
             day_str = day.strftime('%Y-%m-%d')
+            room_days[room][day_str] = {'top': None, 'bottom': None}
 
-            # Ищем бронь на этот день для этой комнаты
-            booking_found = None
-            for booking in calendar_data['bookings']:
-                if booking['room'] == room:
-                    bstart = booking['datestart'][:10] if booking['datestart'] else ''
-                    bend = booking['dateend'][:10] if booking['dateend'] else ''
-                    if bstart <= day_str < bend:
-                        booking_found = booking
-                        break
+        # Заполняем данные о бронях
+        for booking in calendar_data['bookings']:
+            if booking['room'] != room:
+                continue
 
-            if booking_found:
-                # Вычисляем colspan - сколько дней до конца брони (в пределах месяца)
-                bstart = booking_found['datestart'][:10]
-                bend = booking_found['dateend'][:10]
-                end_date = datetime.strptime(bend, '%Y-%m-%d').date()
-                # Ограничиваем концом месяца
-                end_in_month = min(end_date, last_day + timedelta(days=1))
-                colspan = (end_in_month - day).days
+            bstart = booking['datestart'][:10] if booking['datestart'] else ''
+            bend = booking['dateend'][:10] if booking['dateend'] else ''
 
-                # Получаем фамилию
-                guest_name = booking_found.get('guest_name', '')
-                surname = guest_name.split(' ')[0] if guest_name else ''
+            guest_name = booking.get('guest_name', '')
+            surname = guest_name.split(' ')[0] if guest_name else ''
+            booking_info = {
+                'booking': booking,
+                'surname': surname,
+                'numbook': booking.get('numbook', '')
+            }
 
-                room_rows[room].append({
-                    'type': 'booking',
-                    'colspan': colspan,
-                    'booking': booking_found,
-                    'surname': surname,
-                    'day': day
-                })
-                day_idx += colspan
-            else:
-                room_rows[room].append({
-                    'type': 'empty',
-                    'colspan': 1,
-                    'day': day
-                })
-                day_idx += 1
+            for day in days:
+                day_str = day.strftime('%Y-%m-%d')
+
+                if day_str == bstart:
+                    # День заезда - только нижняя часть
+                    room_days[room][day_str]['bottom'] = booking_info
+                elif day_str == bend:
+                    # День выезда - только верхняя часть
+                    room_days[room][day_str]['top'] = booking_info
+                elif bstart < day_str < bend:
+                    # Промежуточные дни - обе части
+                    room_days[room][day_str]['top'] = booking_info
+                    room_days[room][day_str]['bottom'] = booking_info
 
     # Названия месяцев
     month_names = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
@@ -498,7 +488,7 @@ def calendar():
 
     return render_template('calendar.html',
                            rooms=calendar_data['rooms'],
-                           room_rows=room_rows,
+                           room_days=room_days,
                            days=days,
                            year=year,
                            month=month,

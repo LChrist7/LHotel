@@ -36,17 +36,26 @@
                     {% for room in rooms %}
                     <tr>
                         <td class="room-cell">{{ room }}</td>
-                        {% for cell in room_rows[room] %}
-                            {% if cell.type == 'booking' %}
-                                <td colspan="{{ cell.colspan }}"
-                                    class="{% if cell.booking.tour == 1 %}booked-tour{% else %}booked{% endif %} booking-cell"
-                                    title="{{ cell.booking.numbook }}: {{ cell.booking.guest_name }}"
-                                    onclick="window.location='/change'">
-                                    <span class="booking-label">{{ cell.booking.numbook }}<br>{{ cell.surname }}</span>
-                                </td>
-                            {% else %}
-                                <td></td>
-                            {% endif %}
+                        {% for day in days %}
+                            {% set day_str = day.strftime('%Y-%m-%d') %}
+                            {% set cell = room_days[room][day_str] %}
+                            <td class="day-cell">
+                                <div class="day-half day-top {% if cell.top %}{% if cell.top.booking.tour == 1 %}booked-tour{% else %}booked{% endif %}{% endif %}"
+                                     {% if cell.top %}title="{{ cell.top.numbook }}: {{ cell.top.booking.guest_name }}"{% endif %}>
+                                    {% if cell.top and (not cell.bottom or cell.top.numbook != cell.bottom.numbook) %}
+                                        <span class="half-label">{{ cell.top.numbook }} {{ cell.top.surname }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="day-half day-bottom {% if cell.bottom %}{% if cell.bottom.booking.tour == 1 %}booked-tour{% else %}booked{% endif %}{% endif %}"
+                                     {% if cell.bottom %}title="{{ cell.bottom.numbook }}: {{ cell.bottom.booking.guest_name }}"{% endif %}>
+                                    {% if cell.bottom and (not cell.top or cell.top.numbook != cell.bottom.numbook) %}
+                                        <span class="half-label">{{ cell.bottom.numbook }} {{ cell.bottom.surname }}</span>
+                                    {% endif %}
+                                </div>
+                                {% if cell.top and cell.bottom and cell.top.numbook == cell.bottom.numbook %}
+                                    <span class="full-label">{{ cell.top.numbook }} {{ cell.top.surname }}</span>
+                                {% endif %}
+                            </td>
                         {% endfor %}
                     </tr>
                     {% endfor %}

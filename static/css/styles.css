@@ -676,7 +676,6 @@ input::placeholder {
 .calendar-table th,
 .calendar-table td {
     border: 1px solid var(--gray-200);
-    padding: 8px 4px;
     text-align: center;
     font-size: 12px;
 }
@@ -685,53 +684,66 @@ input::placeholder {
     background: var(--gray-800);
     color: white;
     font-weight: 500;
-    padding: 12px 4px;
+    padding: 8px 4px;
 }
 
 .calendar-table th.room-header {
     background: var(--gray-900);
-    min-width: 80px;
+    min-width: 60px;
 }
 
 .calendar-table td.room-cell {
     background: var(--gray-100);
     font-weight: 600;
     text-align: center;
+    padding: 0 8px;
 }
 
-.calendar-table .weekend {
-    background: #fef9c3;
+.calendar-table .day-cell {
+    padding: 0;
+    position: relative;
+    min-width: 45px;
+    height: 36px;
+    vertical-align: middle;
+}
+
+.calendar-table .day-half {
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-table .day-top {
+    border-bottom: 1px solid var(--gray-200);
 }
 
 .calendar-table .booked {
-    background: var(--booking-direct) !important;
-    cursor: pointer;
+    background: var(--booking-direct);
 }
 
 .calendar-table .booked-tour {
-    background: var(--booking-tour) !important;
-    cursor: pointer;
+    background: var(--booking-tour);
 }
 
-.calendar-table .booked:hover,
-.calendar-table .booked-tour:hover {
-    opacity: 0.8;
-}
-
-.calendar-table .booking-cell {
-    position: relative;
-    min-width: 60px;
-}
-
-.calendar-table .booking-label {
-    display: block;
-    font-size: 11px;
+.calendar-table .half-label,
+.calendar-table .full-label {
+    font-size: 9px;
     font-weight: 600;
     color: #333;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding: 2px 4px;
+    padding: 0 2px;
+}
+
+.calendar-table .full-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    z-index: 1;
 }
 
 .legend {
