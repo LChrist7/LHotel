@@ -10,7 +10,16 @@ import sys
 import webbrowser
 import gclass
 
-DATABASE = '/tmp/hotel.db'
+
+def get_app_dir():
+    """Возвращает директорию для хранения данных приложения"""
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller: используем директорию где лежит exe файл
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+DATABASE = os.path.join(get_app_dir(), 'hotel.db')
 DEBUG = False
 SECRET_KEY = 'anua'
 
@@ -24,7 +33,6 @@ def resource_path(relative_path):
 app = Flask(__name__, static_url_path="", static_folder=resource_path(
     'static'), template_folder=resource_path("templates"))
 app.config.from_object(__name__)
-app.config.update(dict(DATABASE=os.path.join(app.root_path, 'hotel.db')))
 
 
 def connect_db():
