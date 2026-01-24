@@ -386,7 +386,9 @@ function getMealCounts() {
 
 function fetchSeasonPrice() {
     const startInput = document.getElementById('DateStart');
+    const endInput = document.getElementById('DateEnd');
     const priceInput = document.getElementById('Price');
+    const totalDisplay = document.getElementById('totalSum');
     const seasonInfo = document.getElementById('seasonInfo');
 
     if (!startInput.value) {
@@ -395,54 +397,99 @@ function fetchSeasonPrice() {
     }
 
     const startDate = startInput.value.split('T')[0];
+    const endDate = endInput.value ? endInput.value.split('T')[0] : '';
     const guestCount = getGuestCount();
     const meals = getMealCounts();
 
-    fetch('/api/seasonal-price', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            start_date: startDate,
-            guest_count: guestCount,
-            fullpans_count: meals.fullpans,
-            halfpans_count: meals.halfpans,
-            breakfast_count: meals.breakfast
+    // Если указаны обе даты - считаем за весь период
+    if (startDate && endDate) {
+        fetch('/api/seasonal-price', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                start_date: startDate,
+                end_date: endDate,
+                guest_count: guestCount,
+                fullpans_count: meals.fullpans,
+                halfpans_count: meals.halfpans,
+                breakfast_count: meals.breakfast
+            })
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.daily_total) {
-            priceInput.value = data.daily_total;
-            calculateSum();
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            if (data.total) {
+                // Устанавливаем итоговую сумму напрямую
+                totalDisplay.textContent = data.total.toLocaleString('ru-RU') + ' руб.';
 
-            // Показываем детальную информацию о расчёте
-            let info = '<strong>Сезон:</strong> ' + data.season_name + '<br>';
-            info += '<strong>Проживание:</strong> ' + data.accommodation + ' руб.';
-            if (guestCount > 2) {
-                info += ' (база ' + data.base_price + ' + ' + (guestCount - 2) + ' доп. × ' + data.extra_person_price + ')';
-            }
-            if (data.meals > 0) {
-                info += '<br><strong>Питание:</strong> ' + data.meals + ' руб.';
-                let mealDetails = [];
-                if (meals.fullpans > 0) mealDetails.push('ПП: ' + meals.fullpans + ' × ' + data.fullpans_price);
-                if (meals.halfpans > 0) mealDetails.push('ПолуП: ' + meals.halfpans + ' × ' + data.halfpans_price);
-                if (meals.breakfast > 0) mealDetails.push('Завтр: ' + meals.breakfast + ' × ' + data.breakfast_price);
-                if (mealDetails.length > 0) {
-                    info += ' (' + mealDetails.join(', ') + ')';
+                // Рассчитываем среднюю цену за ночь для поля "Цена"
+                const avgPrice = Math.round(data.total / data.nights);
+                priceInput.value = avgPrice;
+
+                // Показываем детальную информацию о расчёте
+                let info = '<strong>Ночей:</strong> ' + data.nights + '<br>';
+                info += '<strong>Сезоны:</strong> ' + data.seasons_used.join(', ') + '<br>';
+                info += '<strong>Проживание:</strong> ' + data.total_accommodation.toLocaleString('ru-RU') + ' руб.';
+                if (data.total_meals > 0) {
+                    info += '<br><strong>Питание:</strong> ' + data.total_meals.toLocaleString('ru-RU') + ' руб.';
                 }
+                info += '<br><strong>ИТОГО:</strong> ' + data.total.toLocaleString('ru-RU') + ' руб.';
+                seasonInfo.innerHTML = info;
+                seasonInfo.style.display = 'block';
+            } else {
+                alert('Не удалось получить цену. Проверьте настройки сезонов.');
             }
-            seasonInfo.innerHTML = info;
-            seasonInfo.style.display = 'block';
-        } else {
-            alert('Не удалось получить цену. Проверьте настройки сезонов.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Ошибка при получении цены');
-    });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ошибка при получении цены');
+        });
+    } else {
+        // Только дата заезда - получаем цену за одни сутки
+        fetch('/api/seasonal-price', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                start_date: startDate,
+                guest_count: guestCount,
+                fullpans_count: meals.fullpans,
+                halfpans_count: meals.halfpans,
+                breakfast_count: meals.breakfast
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.daily_total) {
+                priceInput.value = data.daily_total;
+                calculateSum();
+
+                let info = '<strong>Сезон:</strong> ' + data.season_name + '<br>';
+                info += '<strong>Проживание:</strong> ' + data.accommodation + ' руб.';
+                if (guestCount > 2) {
+                    info += ' (база ' + data.base_price + ' + ' + (guestCount - 2) + ' доп. × ' + data.extra_person_price + ')';
+                }
+                if (data.meals > 0) {
+                    info += '<br><strong>Питание:</strong> ' + data.meals + ' руб.';
+                }
+                info += '<br><em>Укажите дату выезда для расчёта по сезонам</em>';
+                seasonInfo.innerHTML = info;
+                seasonInfo.style.display = 'block';
+            } else {
+                alert('Не удалось получить цену. Проверьте настройки сезонов.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Ошибка при получении цены');
+        });
+    }
 }
 </script>
 {% endblock %}

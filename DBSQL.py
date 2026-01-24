@@ -229,6 +229,55 @@ class DBSQL:
             days = (end - start).days if hasattr(end, '__sub__') else 1
             return 5000 * days
 
+    def calculate_full_booking_price(self, start_date, end_date, guest_count=2,
+                                     fullpans_count=0, halfpans_count=0, breakfast_count=0):
+        """Рассчитать полную стоимость бронирования с учётом сезонов, проживания и питания"""
+        try:
+            from datetime import datetime, timedelta
+
+            if isinstance(start_date, str):
+                start = datetime.strptime(start_date[:10], '%Y-%m-%d').date()
+            else:
+                start = start_date.date() if hasattr(start_date, 'date') else start_date
+
+            if isinstance(end_date, str):
+                end = datetime.strptime(end_date[:10], '%Y-%m-%d').date()
+            else:
+                end = end_date.date() if hasattr(end_date, 'date') else end_date
+
+            total_accommodation = 0
+            total_meals = 0
+            current = start
+            delta = timedelta(days=1)
+
+            while current < end:
+                season = self.get_season_for_date(str(current))
+
+                # Проживание за эту ночь
+                daily_accommodation = season['base_price']
+                if guest_count > 2:
+                    daily_accommodation += (guest_count - 2) * season['extra_person_price']
+                total_accommodation += daily_accommodation
+
+                # Питание за эту ночь
+                fullpans_price = season.get('fullpans_price', 2500)
+                halfpans_price = season.get('halfpans_price', 1500)
+                breakfast_price = season.get('breakfast_price', 500)
+
+                daily_meals = (fullpans_count * fullpans_price +
+                              halfpans_count * halfpans_price +
+                              breakfast_count * breakfast_price)
+                total_meals += daily_meals
+
+                current += delta
+
+            return round(total_accommodation + total_meals, 2)
+        except Exception as e:
+            print(e)
+            # Возвращаем простой расчёт без сезонов
+            days = (end - start).days if hasattr(end, '__sub__') else 1
+            return 5000 * days
+
     def makesearch(self, sstart, sdend):
         try:
             # Правильная проверка пересечения интервалов:

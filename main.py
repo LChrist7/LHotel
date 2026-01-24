@@ -218,11 +218,33 @@ def change():
     if request.method == 'POST' and 'FullName1' in request.form and request.form['FullName1']:
         db = get_db()
         dbase = DBSQL.DBSQL(db)
-        sumbook = (datetime.fromisoformat(request.form['DateEnd'].replace('T', ' ')).date() -
-                   datetime.fromisoformat(request.form['DateStart'].replace('T', ' ')).date()).days * int(
-            request.form['Price'])
         startdatedef = datetime.fromisoformat(request.form['DateStart'].replace('T', ' '))
         enddatedef = datetime.fromisoformat(request.form['DateEnd'].replace('T', ' '))
+
+        # Подсчёт количества гостей и питания
+        guest_count = 0
+        fullpans_count = 0
+        halfpans_count = 0
+        breakfast_count = 0
+        for i in range(1, 6):
+            if request.form.get(f'FullName{i}'):
+                guest_count += 1
+                if request.form.get(f'fullpans{i}') == 'on':
+                    fullpans_count += 1
+                if request.form.get(f'halfpans{i}') == 'on':
+                    halfpans_count += 1
+                if request.form.get(f'breakfast{i}') == 'on':
+                    breakfast_count += 1
+
+        # Расчёт с учётом сезонов
+        sumbook = dbase.calculate_full_booking_price(
+            str(startdatedef.date()), str(enddatedef.date()),
+            guest_count=max(guest_count, 1),
+            fullpans_count=fullpans_count,
+            halfpans_count=halfpans_count,
+            breakfast_count=breakfast_count
+        )
+
         guest1 = gclass.GClass()
         guest2 = gclass.GClass()
         guest3 = gclass.GClass()
@@ -263,13 +285,35 @@ def change():
 @app.route("/", methods=["POST", "GET"])
 def index():
     if request.method == 'POST' and 'FullName1' in request.form:
-        sumbook = (datetime.fromisoformat(request.form['DateEnd'].replace('T', ' ')).date() -
-                   datetime.fromisoformat(request.form['DateStart'].replace('T', ' ')).date()).days * int(
-            request.form['Price'])
         startdatedef = datetime.fromisoformat(request.form['DateStart'].replace('T', ' '))
         enddatedef = datetime.fromisoformat(request.form['DateEnd'].replace('T', ' '))
         db = get_db()
         dbase = DBSQL.DBSQL(db)
+
+        # Подсчёт количества гостей и питания
+        guest_count = 0
+        fullpans_count = 0
+        halfpans_count = 0
+        breakfast_count = 0
+        for i in range(1, 6):
+            if request.form.get(f'FullName{i}'):
+                guest_count += 1
+                if request.form.get(f'fullpans{i}') == 'on':
+                    fullpans_count += 1
+                if request.form.get(f'halfpans{i}') == 'on':
+                    halfpans_count += 1
+                if request.form.get(f'breakfast{i}') == 'on':
+                    breakfast_count += 1
+
+        # Расчёт с учётом сезонов
+        sumbook = dbase.calculate_full_booking_price(
+            str(startdatedef.date()), str(enddatedef.date()),
+            guest_count=max(guest_count, 1),
+            fullpans_count=fullpans_count,
+            halfpans_count=halfpans_count,
+            breakfast_count=breakfast_count
+        )
+
         guest1 = gclass.GClass()
         guest2 = gclass.GClass()
         guest3 = gclass.GClass()
@@ -353,17 +397,78 @@ def seasons():
 def api_seasonal_price():
     """API для расчёта цены с учётом сезонов, количества гостей и питания"""
     import json
+    from datetime import datetime, timedelta
     db = get_db()
     dbase = DBSQL.DBSQL(db)
 
     data = request.get_json() if request.is_json else request.form
     start_date = data.get('start_date', '')
+    end_date = data.get('end_date', '')
     guest_count = int(data.get('guest_count', 2))
     fullpans_count = int(data.get('fullpans_count', 0))
     halfpans_count = int(data.get('halfpans_count', 0))
     breakfast_count = int(data.get('breakfast_count', 0))
 
-    if start_date:
+    if start_date and end_date:
+        # Расчёт с учётом периода (разные сезоны)
+        try:
+            start = datetime.strptime(start_date[:10], '%Y-%m-%d').date()
+            end = datetime.strptime(end_date[:10], '%Y-%m-%d').date()
+
+            if end <= start:
+                return json.dumps({'error': 'Дата выезда должна быть позже даты заезда', 'total': 0})
+
+            total_accommodation = 0
+            total_meals = 0
+            current = start
+            delta = timedelta(days=1)
+            nights = 0
+            seasons_used = []
+
+            while current < end:
+                season = dbase.get_season_for_date(str(current))
+
+                # Проживание за эту ночь
+                daily_accommodation = season['base_price']
+                if guest_count > 2:
+                    daily_accommodation += (guest_count - 2) * season['extra_person_price']
+                total_accommodation += daily_accommodation
+
+                # Питание за эту ночь
+                fullpans_price = season.get('fullpans_price', 2500)
+                halfpans_price = season.get('halfpans_price', 1500)
+                breakfast_price = season.get('breakfast_price', 500)
+
+                daily_meals = (fullpans_count * fullpans_price +
+                              halfpans_count * halfpans_price +
+                              breakfast_count * breakfast_price)
+                total_meals += daily_meals
+
+                # Учёт использованных сезонов
+                if season['name'] not in seasons_used:
+                    seasons_used.append(season['name'])
+
+                current += delta
+                nights += 1
+
+            total = total_accommodation + total_meals
+
+            return json.dumps({
+                'total': total,
+                'total_accommodation': total_accommodation,
+                'total_meals': total_meals,
+                'nights': nights,
+                'seasons_used': seasons_used,
+                'guest_count': guest_count,
+                'fullpans_count': fullpans_count,
+                'halfpans_count': halfpans_count,
+                'breakfast_count': breakfast_count
+            })
+        except Exception as e:
+            return json.dumps({'error': str(e), 'total': 0})
+
+    elif start_date:
+        # Расчёт только за одни сутки (для отображения цены за ночь)
         season = dbase.get_season_for_date(start_date)
         if season:
             base_price = season['base_price']
@@ -372,17 +477,14 @@ def api_seasonal_price():
             halfpans_price = season.get('halfpans_price', 1500)
             breakfast_price = season.get('breakfast_price', 500)
 
-            # Расчёт цены за проживание
             accommodation = base_price
             if guest_count > 2:
                 accommodation += extra_person_price * (guest_count - 2)
 
-            # Расчёт цены за питание
             meals = (fullpans_count * fullpans_price +
                     halfpans_count * halfpans_price +
                     breakfast_count * breakfast_price)
 
-            # Итого за сутки
             daily_total = accommodation + meals
 
             return json.dumps({
@@ -394,12 +496,10 @@ def api_seasonal_price():
                 'extra_person_price': extra_person_price,
                 'fullpans_price': fullpans_price,
                 'halfpans_price': halfpans_price,
-                'breakfast_price': breakfast_price,
-                'fullpans_count': fullpans_count,
-                'halfpans_count': halfpans_count,
-                'breakfast_count': breakfast_count
+                'breakfast_price': breakfast_price
             })
-    return json.dumps({'daily_total': 0})
+
+    return json.dumps({'daily_total': 0, 'total': 0})
 
 
 @app.route("/stats", methods=["GET", "POST"])
