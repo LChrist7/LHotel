@@ -2,17 +2,80 @@ class DBSQL:
     def __init__(self, db):
         self.__db = db
         self.__cur = db.cursor()
-        self._ensure_seasons_table()
+        self._ensure_all_tables()
 
-    def _ensure_seasons_table(self):
-        """Создаёт таблицу сезонов, если её нет, или обновляет структуру"""
+    def _ensure_all_tables(self):
+        """Создаёт все необходимые таблицы, если их нет (без перезаписи существующих данных)"""
         try:
-            # Проверяем, существует ли таблица и её структуру
-            self.__cur.execute("PRAGMA table_info(seasons)")
-            columns = [col[1] for col in self.__cur.fetchall()]
+            # Проверяем какие таблицы уже существуют
+            self.__cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+            existing_tables = [row[0] for row in self.__cur.fetchall()]
 
-            if not columns:
-                # Таблица не существует - создаём новую
+            # Таблица rooms
+            if 'rooms' not in existing_tables:
+                self.__cur.execute("""
+                    CREATE TABLE rooms (
+                        number INTEGER NOT NULL PRIMARY KEY,
+                        price INTEGER
+                    )
+                """)
+                # Добавляем номера комнат по умолчанию (101-110)
+                for i in range(101, 111):
+                    self.__cur.execute("INSERT INTO rooms (number, price) VALUES (?, ?)", (i, 5000))
+
+            # Таблица guests
+            if 'guests' not in existing_tables:
+                self.__cur.execute("""
+                    CREATE TABLE guests (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        fio TEXT NOT NULL,
+                        doc TEXT,
+                        fiodocid TEXT,
+                        born DATE,
+                        phone TEXT
+                    )
+                """)
+
+            # Таблица roombooks
+            if 'roombooks' not in existing_tables:
+                self.__cur.execute("""
+                    CREATE TABLE roombooks (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        numbook TEXT,
+                        guest1 INTEGER NOT NULL,
+                        fullpans1 INTEGER DEFAULT 0,
+                        halfpans1 INTEGER DEFAULT 0,
+                        breakfast1 INTEGER DEFAULT 0,
+                        guest2 INTEGER,
+                        fullpans2 INTEGER DEFAULT 0,
+                        halfpans2 INTEGER DEFAULT 0,
+                        breakfast2 INTEGER DEFAULT 0,
+                        guest3 INTEGER,
+                        fullpans3 INTEGER DEFAULT 0,
+                        halfpans3 INTEGER DEFAULT 0,
+                        breakfast3 INTEGER DEFAULT 0,
+                        guest4 INTEGER,
+                        fullpans4 INTEGER DEFAULT 0,
+                        halfpans4 INTEGER DEFAULT 0,
+                        breakfast4 INTEGER DEFAULT 0,
+                        guest5 INTEGER,
+                        fullpans5 INTEGER DEFAULT 0,
+                        halfpans5 INTEGER DEFAULT 0,
+                        breakfast5 INTEGER DEFAULT 0,
+                        room INTEGER NOT NULL,
+                        datestart DATE NOT NULL,
+                        dateend DATE NOT NULL,
+                        tour INTEGER DEFAULT 0,
+                        transfer INTEGER DEFAULT 0,
+                        price INTEGER NOT NULL,
+                        prep INTEGER DEFAULT 0,
+                        sumbook INTEGER NOT NULL,
+                        comm TEXT
+                    )
+                """)
+
+            # Таблица seasons
+            if 'seasons' not in existing_tables:
                 self.__cur.execute("""
                     CREATE TABLE seasons (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -27,7 +90,9 @@ class DBSQL:
                     )
                 """)
             else:
-                # Миграция существующей таблицы
+                # Миграция существующей таблицы seasons
+                self.__cur.execute("PRAGMA table_info(seasons)")
+                columns = [col[1] for col in self.__cur.fetchall()]
                 if 'price_modifier' in columns and 'base_price' not in columns:
                     self.__cur.execute("ALTER TABLE seasons ADD COLUMN base_price REAL NOT NULL DEFAULT 5000")
                     self.__cur.execute("ALTER TABLE seasons ADD COLUMN extra_person_price REAL NOT NULL DEFAULT 1000")
@@ -40,7 +105,7 @@ class DBSQL:
 
             self.__db.commit()
         except Exception as e:
-            print(e)
+            print(f"Error ensuring tables: {e}")
 
     def get_seasons(self):
         """Получить все сезоны"""
