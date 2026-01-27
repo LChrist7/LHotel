@@ -399,6 +399,38 @@ def rooms():
     return render_template('rooms.html', rooms=rooms_list, message=message)
 
 
+@app.route("/api/available-rooms", methods=["POST"])
+def api_available_rooms():
+    """API для получения свободных комнат на указанные даты"""
+    import json
+    db = get_db()
+    dbase = DBSQL.DBSQL(db)
+
+    data = request.get_json() if request.is_json else request.form
+    start_date = data.get('start_date', '')
+    end_date = data.get('end_date', '')
+
+    if start_date and end_date:
+        available = dbase.makesearch(start_date, end_date)
+        all_rooms = dbase.get_all_rooms()
+
+        # Формируем список с информацией о доступности
+        rooms_with_status = []
+        for room in all_rooms:
+            rooms_with_status.append({
+                'number': room['number'],
+                'name': room.get('name', ''),
+                'available': room['number'] in available
+            })
+
+        return json.dumps({
+            'rooms': rooms_with_status,
+            'available_count': len(available)
+        })
+
+    return json.dumps({'rooms': [], 'available_count': 0})
+
+
 @app.route("/api/seasonal-price", methods=["POST"])
 def api_seasonal_price():
     """API для расчёта цены с учётом сезонов, количества гостей и питания"""

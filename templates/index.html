@@ -5,29 +5,37 @@
 {% block page_title %}Новое бронирование{% endblock %}
 
 {% block content %}
-<form action="/" method="post" id="bookingForm">
+<form action="/" method="post" id="bookingForm" onsubmit="return validateForm()">
     <div class="card mb-5">
         <div class="card-header">
             <h3 class="card-title">Информация о брони</h3>
         </div>
         <div class="card-body">
-            <div class="form-row form-row-4">
+            <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Номер брони</label>
-                    <input type="text" name="Numbook" id="Numbook" placeholder="Например: 2024-001" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Комната</label>
-                    <input type="number" name="Room" value="101" min="1">
+                    <input type="text" name="Numbook" id="Numbook" placeholder="Например: 2025-001" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Дата заезда</label>
-                    <input type="datetime-local" name="DateStart" id="DateStart" onchange="onDateStartChange(); calculateSum()">
+                    <input type="datetime-local" name="DateStart" id="DateStart" onchange="onDateStartChange(); updateRoomsList(); calculateSum()" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Дата выезда</label>
-                    <input type="datetime-local" name="DateEnd" id="DateEnd" onchange="calculateSum()">
+                    <input type="datetime-local" name="DateEnd" id="DateEnd" onchange="onDateEndChange(); updateRoomsList(); calculateSum()" required>
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Комната</label>
+                    <select name="Room" id="Room" required>
+                        <option value="">Сначала выберите даты</option>
+                    </select>
+                    <div id="roomsInfo" class="text-sm text-muted mt-1"></div>
+                </div>
+            </div>
+            <div id="nightsDisplay" class="mt-3" style="display: none;">
+                <span class="badge badge-primary" style="font-size: 14px; padding: 8px 16px;">
+                    <span id="nightsCount">0</span> ночей
+                </span>
             </div>
         </div>
     </div>
@@ -311,26 +319,174 @@ function onDateStartChange() {
     const endInput = document.getElementById('DateEnd');
 
     if (startInput.value) {
-        // Получаем дату из startInput
         let startValue = startInput.value;
 
-        // Устанавливаем время 14:00 для заезда если не установлено вручную
+        // Устанавливаем время 14:00 для заезда
         if (startValue.length === 10) {
-            // Если ввели только дату без времени
             startValue = startValue + 'T14:00';
             startInput.value = startValue;
         } else if (startValue.includes('T')) {
-            // Заменяем время на 14:00
             const datePart = startValue.split('T')[0];
             startInput.value = datePart + 'T14:00';
         }
 
-        // Копируем дату в поле выезда с временем 12:00
+        // Устанавливаем дату выезда +1 день с временем 12:00
         if (!endInput.value) {
-            const datePart = startInput.value.split('T')[0];
+            const startDate = new Date(startInput.value);
+            startDate.setDate(startDate.getDate() + 1);
+            const endDateStr = startDate.toISOString().split('T')[0];
+            endInput.value = endDateStr + 'T12:00';
+        }
+    }
+    updateNightsDisplay();
+}
+
+function onDateEndChange() {
+    const endInput = document.getElementById('DateEnd');
+
+    if (endInput.value) {
+        let endValue = endInput.value;
+
+        // Устанавливаем время 12:00 для выезда
+        if (endValue.includes('T')) {
+            const datePart = endValue.split('T')[0];
             endInput.value = datePart + 'T12:00';
         }
     }
+    updateNightsDisplay();
+}
+
+function updateNightsDisplay() {
+    const startInput = document.getElementById('DateStart');
+    const endInput = document.getElementById('DateEnd');
+    const nightsDisplay = document.getElementById('nightsDisplay');
+    const nightsCount = document.getElementById('nightsCount');
+
+    if (startInput.value && endInput.value) {
+        const start = new Date(startInput.value);
+        const end = new Date(endInput.value);
+        const nights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+        if (nights > 0) {
+            nightsCount.textContent = nights;
+            nightsDisplay.style.display = 'block';
+        } else {
+            nightsDisplay.style.display = 'none';
+        }
+    } else {
+        nightsDisplay.style.display = 'none';
+    }
+}
+
+function updateRoomsList() {
+    const startInput = document.getElementById('DateStart');
+    const endInput = document.getElementById('DateEnd');
+    const roomSelect = document.getElementById('Room');
+    const roomsInfo = document.getElementById('roomsInfo');
+
+    if (!startInput.value || !endInput.value) {
+        roomSelect.innerHTML = '<option value="">Сначала выберите даты</option>';
+        roomsInfo.textContent = '';
+        return;
+    }
+
+    const startDate = startInput.value.split('T')[0];
+    const endDate = endInput.value.split('T')[0];
+
+    fetch('/api/available-rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ start_date: startDate, end_date: endDate })
+    })
+    .then(response => response.json())
+    .then(data => {
+        roomSelect.innerHTML = '';
+
+        if (data.rooms && data.rooms.length > 0) {
+            // Сначала добавляем свободные комнаты
+            const availableRooms = data.rooms.filter(r => r.available);
+            const unavailableRooms = data.rooms.filter(r => !r.available);
+
+            if (availableRooms.length > 0) {
+                const optgroupAvailable = document.createElement('optgroup');
+                optgroupAvailable.label = 'Свободные';
+                availableRooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room.number;
+                    option.textContent = room.number + (room.name ? ' - ' + room.name : '');
+                    optgroupAvailable.appendChild(option);
+                });
+                roomSelect.appendChild(optgroupAvailable);
+            }
+
+            if (unavailableRooms.length > 0) {
+                const optgroupUnavailable = document.createElement('optgroup');
+                optgroupUnavailable.label = 'Занятые';
+                unavailableRooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room.number;
+                    option.textContent = room.number + (room.name ? ' - ' + room.name : '');
+                    option.disabled = true;
+                    option.style.color = '#999';
+                    optgroupUnavailable.appendChild(option);
+                });
+                roomSelect.appendChild(optgroupUnavailable);
+            }
+
+            roomsInfo.innerHTML = '<span style="color: #28a745;">Свободно: ' + data.available_count + '</span>';
+        } else {
+            roomSelect.innerHTML = '<option value="">Нет комнат</option>';
+            roomsInfo.textContent = '';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        roomSelect.innerHTML = '<option value="">Ошибка загрузки</option>';
+    });
+}
+
+function validateForm() {
+    const startInput = document.getElementById('DateStart');
+    const endInput = document.getElementById('DateEnd');
+    const roomSelect = document.getElementById('Room');
+    const priceInput = document.getElementById('Price');
+    const fullName1 = document.querySelector('input[name="FullName1"]');
+
+    // Проверка дат
+    if (!startInput.value || !endInput.value) {
+        alert('Укажите даты заезда и выезда');
+        return false;
+    }
+
+    const start = new Date(startInput.value);
+    const end = new Date(endInput.value);
+
+    if (end <= start) {
+        alert('Дата выезда должна быть позже даты заезда');
+        return false;
+    }
+
+    // Проверка комнаты
+    if (!roomSelect.value) {
+        alert('Выберите комнату');
+        return false;
+    }
+
+    // Проверка цены
+    const price = parseFloat(priceInput.value);
+    if (!price || price <= 0) {
+        if (!confirm('Цена за ночь равна 0. Продолжить?')) {
+            return false;
+        }
+    }
+
+    // Проверка гостя
+    if (!fullName1.value.trim()) {
+        alert('Укажите ФИО основного гостя');
+        return false;
+    }
+
+    return true;
 }
 
 function calculateSum() {
@@ -345,12 +501,13 @@ function calculateSum() {
         const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
         const total = days * parseFloat(priceInput.value);
 
-        if (days > 0 && total > 0) {
+        if (days > 0 && total >= 0) {
             totalDisplay.textContent = total.toLocaleString('ru-RU') + ' руб.';
         } else {
             totalDisplay.textContent = '0 руб.';
         }
     }
+    updateNightsDisplay();
 }
 
 function getGuestCount() {
