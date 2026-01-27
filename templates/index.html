@@ -20,6 +20,14 @@
                     <label class="form-label">Дата заезда</label>
                     <input type="datetime-local" name="DateStart" id="DateStart" onchange="onDateStartChange(); updateRoomsList(); calculateSum()" required>
                 </div>
+                <div class="form-group" style="flex: 0 0 100px; min-width: 100px;">
+                    <label class="form-label">Ночей</label>
+                    <div class="nights-control">
+                        <button type="button" class="nights-btn" onclick="adjustNights(-1)">−</button>
+                        <span id="nightsCount">1</span>
+                        <button type="button" class="nights-btn" onclick="adjustNights(1)">+</button>
+                    </div>
+                </div>
                 <div class="form-group">
                     <label class="form-label">Дата выезда</label>
                     <input type="datetime-local" name="DateEnd" id="DateEnd" onchange="onDateEndChange(); updateRoomsList(); calculateSum()" required>
@@ -31,11 +39,6 @@
                     </select>
                     <div id="roomsInfo" class="text-sm text-muted mt-1"></div>
                 </div>
-            </div>
-            <div id="nightsDisplay" class="mt-3" style="display: none;">
-                <span class="badge badge-primary" style="font-size: 14px; padding: 8px 16px;">
-                    <span id="nightsCount">0</span> ночей
-                </span>
             </div>
         </div>
     </div>
@@ -301,6 +304,46 @@
 {% endblock %}
 
 {% block extra_js %}
+<style>
+.nights-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 8px 4px;
+    height: 42px;
+}
+.nights-control span {
+    font-size: 18px;
+    font-weight: 600;
+    min-width: 24px;
+    text-align: center;
+}
+.nights-btn {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+.nights-btn:hover {
+    background: #2563eb;
+}
+.nights-btn:active {
+    background: #1d4ed8;
+}
+</style>
 <script>
 function updateGuestForms(count) {
     document.getElementById('guestCount').textContent = count;
@@ -359,7 +402,6 @@ function onDateEndChange() {
 function updateNightsDisplay() {
     const startInput = document.getElementById('DateStart');
     const endInput = document.getElementById('DateEnd');
-    const nightsDisplay = document.getElementById('nightsDisplay');
     const nightsCount = document.getElementById('nightsCount');
 
     if (startInput.value && endInput.value) {
@@ -369,13 +411,49 @@ function updateNightsDisplay() {
 
         if (nights > 0) {
             nightsCount.textContent = nights;
-            nightsDisplay.style.display = 'block';
         } else {
-            nightsDisplay.style.display = 'none';
+            nightsCount.textContent = 0;
         }
     } else {
-        nightsDisplay.style.display = 'none';
+        nightsCount.textContent = '-';
     }
+}
+
+function adjustNights(delta) {
+    const startInput = document.getElementById('DateStart');
+    const endInput = document.getElementById('DateEnd');
+
+    if (!startInput.value) {
+        alert('Сначала выберите дату заезда');
+        return;
+    }
+
+    const start = new Date(startInput.value);
+    let end;
+
+    if (endInput.value) {
+        end = new Date(endInput.value);
+    } else {
+        end = new Date(start);
+        end.setDate(end.getDate() + 1);
+    }
+
+    // Вычисляем текущее количество ночей
+    const currentNights = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    const newNights = currentNights + delta;
+
+    // Минимум 1 ночь
+    if (newNights < 1) return;
+
+    // Устанавливаем новую дату выезда
+    const newEnd = new Date(start);
+    newEnd.setDate(newEnd.getDate() + newNights);
+    const endDateStr = newEnd.toISOString().split('T')[0];
+    endInput.value = endDateStr + 'T12:00';
+
+    updateNightsDisplay();
+    updateRoomsList();
+    calculateSum();
 }
 
 function updateRoomsList() {
