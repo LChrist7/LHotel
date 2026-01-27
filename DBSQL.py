@@ -22,6 +22,22 @@ class DBSQL:
                 # Добавляем номера комнат по умолчанию (101-110)
                 for i in range(101, 111):
                     self.__cur.execute("INSERT INTO rooms (number, name) VALUES (?, ?)", (i, f'Комната {i}'))
+            else:
+                # Миграция существующей таблицы rooms
+                self.__cur.execute("PRAGMA table_info(rooms)")
+                columns = [col[1] for col in self.__cur.fetchall()]
+
+                # Добавляем столбец name если его нет
+                if 'name' not in columns:
+                    self.__cur.execute("ALTER TABLE rooms ADD COLUMN name TEXT DEFAULT ''")
+
+                # Проверяем, есть ли комнаты в таблице
+                self.__cur.execute("SELECT COUNT(*) FROM rooms")
+                count = self.__cur.fetchone()[0]
+                if count == 0:
+                    # Добавляем комнаты по умолчанию (101-110)
+                    for i in range(101, 111):
+                        self.__cur.execute("INSERT INTO rooms (number, name) VALUES (?, ?)", (i, f'Комната {i}'))
 
             # Таблица guests
             if 'guests' not in existing_tables:
