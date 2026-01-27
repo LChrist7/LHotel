@@ -16,12 +16,12 @@ class DBSQL:
                 self.__cur.execute("""
                     CREATE TABLE rooms (
                         number INTEGER NOT NULL PRIMARY KEY,
-                        price INTEGER
+                        name TEXT DEFAULT ''
                     )
                 """)
                 # Добавляем номера комнат по умолчанию (101-110)
                 for i in range(101, 111):
-                    self.__cur.execute("INSERT INTO rooms (number, price) VALUES (?, ?)", (i, 5000))
+                    self.__cur.execute("INSERT INTO rooms (number, name) VALUES (?, ?)", (i, f'Комната {i}'))
 
             # Таблица guests
             if 'guests' not in existing_tables:
@@ -277,6 +277,51 @@ class DBSQL:
             # Возвращаем простой расчёт без сезонов
             days = (end - start).days if hasattr(end, '__sub__') else 1
             return 5000 * days
+
+    # === Методы управления комнатами ===
+
+    def get_all_rooms(self):
+        """Получить список всех комнат"""
+        try:
+            self.__cur.execute("SELECT number, name FROM rooms ORDER BY number")
+            return [dict(row) for row in self.__cur.fetchall()]
+        except Exception as e:
+            print(e)
+            return []
+
+    def add_room(self, number, name=''):
+        """Добавить новую комнату"""
+        try:
+            if not name:
+                name = f'Комната {number}'
+            self.__cur.execute("INSERT INTO rooms (number, name) VALUES (?, ?)", (number, name))
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def update_room(self, number, name):
+        """Обновить название комнаты"""
+        try:
+            self.__cur.execute("UPDATE rooms SET name = ? WHERE number = ?", (name, number))
+            return True
+        except Exception as e:
+            print(e)
+            return False
+
+    def delete_room(self, number):
+        """Удалить комнату (только если нет броней)"""
+        try:
+            # Проверяем, есть ли брони на эту комнату
+            self.__cur.execute("SELECT COUNT(*) as cnt FROM roombooks WHERE room = ?", (number,))
+            count = self.__cur.fetchone()['cnt']
+            if count > 0:
+                return False, f'Нельзя удалить: есть {count} бронирований'
+            self.__cur.execute("DELETE FROM rooms WHERE number = ?", (number,))
+            return True, 'Комната удалена'
+        except Exception as e:
+            print(e)
+            return False, str(e)
 
     def makesearch(self, sstart, sdend):
         try:

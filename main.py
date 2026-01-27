@@ -221,29 +221,10 @@ def change():
         startdatedef = datetime.fromisoformat(request.form['DateStart'].replace('T', ' '))
         enddatedef = datetime.fromisoformat(request.form['DateEnd'].replace('T', ' '))
 
-        # Подсчёт количества гостей и питания
-        guest_count = 0
-        fullpans_count = 0
-        halfpans_count = 0
-        breakfast_count = 0
-        for i in range(1, 6):
-            if request.form.get(f'FullName{i}'):
-                guest_count += 1
-                if request.form.get(f'fullpans{i}') == 'on':
-                    fullpans_count += 1
-                if request.form.get(f'halfpans{i}') == 'on':
-                    halfpans_count += 1
-                if request.form.get(f'breakfast{i}') == 'on':
-                    breakfast_count += 1
-
-        # Расчёт с учётом сезонов
-        sumbook = dbase.calculate_full_booking_price(
-            str(startdatedef.date()), str(enddatedef.date()),
-            guest_count=max(guest_count, 1),
-            fullpans_count=fullpans_count,
-            halfpans_count=halfpans_count,
-            breakfast_count=breakfast_count
-        )
+        # Расчёт суммы: дни × введённая цена за сутки
+        days = (enddatedef.date() - startdatedef.date()).days
+        price = int(request.form.get('Price', 0))
+        sumbook = days * price
 
         guest1 = gclass.GClass()
         guest2 = gclass.GClass()
@@ -290,29 +271,10 @@ def index():
         db = get_db()
         dbase = DBSQL.DBSQL(db)
 
-        # Подсчёт количества гостей и питания
-        guest_count = 0
-        fullpans_count = 0
-        halfpans_count = 0
-        breakfast_count = 0
-        for i in range(1, 6):
-            if request.form.get(f'FullName{i}'):
-                guest_count += 1
-                if request.form.get(f'fullpans{i}') == 'on':
-                    fullpans_count += 1
-                if request.form.get(f'halfpans{i}') == 'on':
-                    halfpans_count += 1
-                if request.form.get(f'breakfast{i}') == 'on':
-                    breakfast_count += 1
-
-        # Расчёт с учётом сезонов
-        sumbook = dbase.calculate_full_booking_price(
-            str(startdatedef.date()), str(enddatedef.date()),
-            guest_count=max(guest_count, 1),
-            fullpans_count=fullpans_count,
-            halfpans_count=halfpans_count,
-            breakfast_count=breakfast_count
-        )
+        # Расчёт суммы: дни × введённая цена за сутки
+        days = (enddatedef.date() - startdatedef.date()).days
+        price = int(request.form.get('Price', 0))
+        sumbook = days * price
 
         guest1 = gclass.GClass()
         guest2 = gclass.GClass()
@@ -391,6 +353,50 @@ def seasons():
 
     seasons_list = dbase.get_seasons()
     return render_template('seasons.html', seasons=seasons_list)
+
+
+@app.route("/rooms", methods=["GET", "POST"])
+def rooms():
+    """Управление комнатами отеля"""
+    db = get_db()
+    dbase = DBSQL.DBSQL(db)
+    message = None
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+
+        if action == 'add':
+            number = request.form.get('number')
+            name = request.form.get('name', '')
+            if number:
+                try:
+                    number = int(number)
+                    if dbase.add_room(number, name):
+                        db.commit()
+                        message = {'type': 'success', 'text': f'Комната {number} добавлена'}
+                    else:
+                        message = {'type': 'error', 'text': f'Комната {number} уже существует'}
+                except ValueError:
+                    message = {'type': 'error', 'text': 'Номер комнаты должен быть числом'}
+
+        elif action == 'update':
+            number = int(request.form.get('number'))
+            name = request.form.get('name', '')
+            if dbase.update_room(number, name):
+                db.commit()
+                message = {'type': 'success', 'text': f'Комната {number} обновлена'}
+
+        elif action == 'delete':
+            number = int(request.form.get('number'))
+            success, msg = dbase.delete_room(number)
+            if success:
+                db.commit()
+                message = {'type': 'success', 'text': msg}
+            else:
+                message = {'type': 'error', 'text': msg}
+
+    rooms_list = dbase.get_all_rooms()
+    return render_template('rooms.html', rooms=rooms_list, message=message)
 
 
 @app.route("/api/seasonal-price", methods=["POST"])
