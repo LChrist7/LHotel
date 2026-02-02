@@ -345,9 +345,10 @@ class DBSQL:
         try:
             # Правильная проверка пересечения интервалов:
             # Два интервала [A,B] и [C,D] пересекаются если A < D AND B > C
+            # Используем DATE() для сравнения только дат без времени
             self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (
                                SELECT roombooks.room FROM roombooks
-                               WHERE ? < roombooks.dateend AND ? > roombooks.datestart
+                               WHERE DATE(?) < DATE(roombooks.dateend) AND DATE(?) > DATE(roombooks.datestart)
                                ) ORDER BY rooms.number""",
                                (sstart, sdend))
             res = [item['number'] for item in self.__cur.fetchall()]
@@ -361,9 +362,10 @@ class DBSQL:
     def makesearchonadd(self, dates, datee, room):
         try:
             # Проверяем, свободна ли конкретная комната в заданный период
+            # Используем DATE() для сравнения только дат без времени
             self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (
                                SELECT roombooks.room FROM roombooks
-                               WHERE ? < roombooks.dateend AND ? > roombooks.datestart
+                               WHERE DATE(?) < DATE(roombooks.dateend) AND DATE(?) > DATE(roombooks.datestart)
                                ) AND rooms.number = ?
                                ORDER BY rooms.number""",
                                (dates, datee, room))
@@ -379,9 +381,10 @@ class DBSQL:
     def makesearchonupdate(self, dates, datee, numbook, room):
         try:
             # Проверяем доступность комнаты, исключая текущую бронь
+            # Используем DATE() для сравнения только дат без времени
             self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (
                                SELECT roombooks.room FROM roombooks
-                               WHERE ? < roombooks.dateend AND ? > roombooks.datestart
+                               WHERE DATE(?) < DATE(roombooks.dateend) AND DATE(?) > DATE(roombooks.datestart)
                                AND roombooks.numbook != ?
                                ) AND rooms.number = ?
                                ORDER BY rooms.number""",
