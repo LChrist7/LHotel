@@ -27,6 +27,13 @@ app.config.from_object(__name__)
 app.config.update(dict(DATABASE=os.path.join(app.root_path, 'hotel.db')))
 
 
+def parse_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def connect_db():
     conn = sqlite3.connect(app.config['DATABASE'])
     conn.row_factory = sqlite3.Row
@@ -200,12 +207,15 @@ def change():
         except IndexError:
             return "<h2>Брони с таким номером не существует</h2>"
         info = list(context[1])
+        info_dict = dict(info[0])
+        info_dict['prep'] = parse_int(info_dict.get('prep'))
+        info_dict['sumbook'] = parse_int(info_dict.get('sumbook'))
         return render_template('change.html', guest1=dict(guests[0]),
                                guest2=(dict(guests[1]) if len(guests) > 1 else []),
                                guest3=(dict(guests[2]) if len(guests) > 2 else []),
                                guest4=(dict(guests[3]) if len(guests) > 3 else []),
                                guest5=(dict(guests[4]) if len(guests) > 4 else []),
-                               info=dict(info[0]), sumdiff=int(info[0]['sumbook'] - info[0]['prep']))
+                               info=info_dict, sumdiff=info_dict['sumbook'] - info_dict['prep'])
     if request.method == 'POST' and 'FullName1' in request.form and request.form['FullName1']:
         db = get_db()
         dbase = DBSQL.DBSQL(db)
@@ -234,7 +244,7 @@ def change():
             tour = 0
         resadd = dbase.updatebook(request.form['numchange2'], guest1, guest2, guest3, guest4, guest5,
                                   startdatedef, enddatedef, request.form['Room'],
-                                  tour, transfer, request.form['Price'], request.form['Prep'],
+                                  tour, transfer, request.form['Price'], parse_int(request.form.get('Prep')),
                                   sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
         db.commit()
         db.close()
@@ -278,7 +288,7 @@ def index():
             tour = 0
         resadd = dbase.addbook(request.form['Numbook'], guest1, guest2, guest3, guest4, guest5,
                                startdatedef, enddatedef, request.form['Room'],
-                               tour, transfer, request.form['Price'], request.form['Prep'],
+                               tour, transfer, request.form['Price'], parse_int(request.form.get('Prep')),
                                sumbook, str(startdatedef), str(enddatedef), request.form['Comm'])
         db.commit()
         db.close()

@@ -3,6 +3,13 @@ class DBSQL:
         self.__db = db
         self.__cur = db.cursor()
 
+    @staticmethod
+    def _to_int(value, default=0):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
     def makesearch(self, sstart, sdend):
         try:
             self.__cur.execute("""SELECT rooms.number FROM rooms WHERE rooms.number NOT IN (select roombooks.room 
@@ -137,7 +144,8 @@ class DBSQL:
                                 guest4.fullpans, guest4.halfpans, guest4.breakfast,
                                 guest5.Fullname, bookskey5,
                                 guest5.fullpans, guest5.halfpans, guest5.breakfast,
-                                room, sdate, edate, tour, transfer, price, prep, sumbook, comm))
+                                self._to_int(room), sdate, edate, self._to_int(tour), self._to_int(transfer),
+                                self._to_int(price), self._to_int(prep), self._to_int(sumbook), comm))
         except Exception as e:
             print(e)
             return 0
@@ -222,8 +230,9 @@ class DBSQL:
                                 guest4.fullpans, guest4.halfpans, guest4.breakfast,
                                 guest5.Fullname, bookskey5,
                                 guest5.fullpans, guest5.halfpans, guest5.breakfast,
-                                int(room), sdate, edate, int(tour), int(transfer), int(price), int(prep),
-                                int(sumbook), str(comm), str(numbook)))
+                                self._to_int(room), sdate, edate, self._to_int(tour), self._to_int(transfer),
+                                self._to_int(price), self._to_int(prep), self._to_int(sumbook), str(comm),
+                                str(numbook)))
         except Exception as e:
             print(e)
             return 0
